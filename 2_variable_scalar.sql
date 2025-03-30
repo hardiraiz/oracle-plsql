@@ -2,7 +2,7 @@
 -- 1. Tipe data numerik
 DECLARE
   v_number NUMBER(10,2) := 1234.56;  -- Maksimal 10 digit, 2 desimal
-  v_integer PLS_INTEGER := 100;       -- Integer dengan performa lebih baik
+  v_integer PLS_INTEGER := 100;       -- Integer dengan performa lebih baik akan tetapi hanya untuk bilangan bulat
   v_float BINARY_FLOAT := 3.14;       -- Floating point 32-bit
   v_double BINARY_DOUBLE := 3.14159265358979;  -- Floating point 64-bit
 BEGIN
@@ -11,6 +11,14 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('Float: ' || v_float);
   DBMS_OUTPUT.PUT_LINE('Double: ' || v_double);
 END;
+
+-- NOTE : 
+-- a. Binary Float cocok untuk menangani data dari sensor, game enging atau perangkat IoT karena menggunakan format floating-point standar IEEE
+-- b. Binary Float digunakan untuk perhitungan matematika yang tidak memerlukan presisi tinggi 
+-- c. Binary Float digunakan dalam pemrosesan sinyal digital (DSP) atau geospasial (GIS)
+-- d. Binary Float bisa menyimpan NaN, Infinity (-/+) sedangkan number tidak dapat menyimpan NaN
+-- e. Binary Double lebih presisi dari Float, cocok untuk keuangan, simulasi ilmiah, machine learning, dan GIS
+-- f. Jika butuh presisi tanpa error floating-point, gunakan NUMBER tetapi lebih lambat
 
 -- 2. Tipe data karakter
 DECLARE
@@ -41,10 +49,14 @@ DECLARE
   v_date DATE := SYSDATE;  -- Menyimpan tanggal & waktu saat ini
   v_timestamp TIMESTAMP := SYSTIMESTAMP;  -- Presisi lebih tinggi
   v_interval INTERVAL DAY TO SECOND := INTERVAL '5' DAY;  -- Perbedaan waktu 5 hari
+  v_interval_2 INTERVAL DAY(4) TO SECOND(2) := '24 02:05:21.012'; -- menyimpan selisih waktu dalam format hari, jam, menit, detik, dan milidetik.
+  v_interval_3 INTERVAL YEAR(3) TO MONTH := '122-3'; --menyimpan selisih waktu dalam tahun dan bulan, output : 122 tahun 3 bulan
 BEGIN
   DBMS_OUTPUT.PUT_LINE('Date: ' || TO_CHAR(v_date, 'DD-MON-YYYY HH24:MI:SS'));
   DBMS_OUTPUT.PUT_LINE('Timestamp: ' || TO_CHAR(v_timestamp, 'DD-MON-YYYY HH24:MI:SS.FF'));
   DBMS_OUTPUT.PUT_LINE('Interval: ' || v_interval);
+  DBMS_OUTPUT.PUT_LINE('Interval 2: ' || v_interval_2);
+  DBMS_OUTPUT.PUT_LINE('Interval 3: ' || v_interval_2);
 END;
 
 -- Contoh pengunaan interval dalam menghitung waktu habis kontrak
