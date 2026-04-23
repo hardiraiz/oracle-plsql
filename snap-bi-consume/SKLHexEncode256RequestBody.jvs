@@ -1,0 +1,50 @@
+DROP JAVA SOURCE XXSKL."SKLHexEncode256RequestBody";
+
+CREATE OR REPLACE AND RESOLVE JAVA SOURCE NAMED XXSKL."SKLHexEncode256RequestBody"
+as import java.nio.charset.StandardCharsets;
+    import java.security.MessageDigest;
+    import java.security.NoSuchAlgorithmException;
+    import java.security.InvalidKeyException;
+    import javax.crypto.Mac;
+    import javax.crypto.spec.SecretKeySpec;
+    import java.util.Base64;
+
+    public class SKLHexEncode256RequestBody {
+
+        public static String sign(String v_request_body) throws Exception {
+            String hexEncode;
+            if (v_request_body != null) {
+                hexEncode = hash256(v_request_body);
+            }
+            else {
+                hexEncode = v_request_body;
+            }
+            return hexEncode;
+        }
+
+        public static String hash256(String input) throws NoSuchAlgorithmException {
+        // If input is null (for GET/DELETE), use empty string
+        String minifiedInput = (input == null) ? "" : input.replaceAll("\\r|\\n|\\t|\\s", "");
+
+        // Compute SHA-256 hash
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(minifiedInput.getBytes(StandardCharsets.UTF_8));
+
+        // Convert byte array to hex-encoded lowercase string
+        StringBuilder hexStr = new StringBuilder();
+        for (byte b : hash) {
+            hexStr.append(String.format("%02x", b));  // Ensures two-digit hex representation
+        }
+
+    return hexStr.toString();
+}
+
+
+        private static byte[] calculateHMACSHA512(String data, String key) throws NoSuchAlgorithmException, InvalidKeyException {
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+            Mac mac = Mac.getInstance("HmacSHA512");
+            mac.init(secretKeySpec);
+            return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+/

@@ -1,0 +1,70 @@
+/* Formatted on 9/5/2025 12:19:29 AM (QP5 v5.362) */
+CREATE OR REPLACE VIEW XXSKL_AP_PAYMENT_REQUEST_FIND_COL_HDR_V
+AS
+      SELECT C001
+                 PAYMENT_PROCESS_REQUEST,
+             TO_DATE (C002, 'YYYY-MM-DD HH24:MI:SS')
+                 PAYMENT_DATE,
+             TO_DATE (C003, 'YYYY-MM-DD HH24:MI:SS')
+                 PAYMENT_DUE_DATE,
+             --       C004     PAYMENT_REFERENCE_NUMBER,
+             --       C005     PAPER_DOCUMENT_NUMBER,
+             COUNT (C049)
+                 MANY_PAYMENTS,
+             C006
+                 PAYMENT_CURRENCY_CODE,
+             SUM (C007)
+                 PAYMENT_AMOUNT,
+             C008
+                 INTERNAL_BANK_ACCOUNT_NUM,
+             C009
+                 INTERNAL_BANK_NAME,
+             --             C010             EXTERNAL_BANK_ACCOUNT_NUM,
+             --             C011             EXTERNAL_BANK_NAME,
+             --             C012             EXTERNAL_BANK_ACCOUNT_NAME,
+             --       C013     PAYEE_NAME,
+             --       C014     PAYEE_PARTY_NAME,
+             --       C015     PAYEE_ADDRESS1,
+             --       C016     PAYEE_CITY,
+             --       C017     PARTY_SITE_NAME,
+             --       C018     PAYEE_ADDRESS_CONCAT,
+             --       C019     PAYMENT_PROFILE_SYS_NAME,
+             --       C020     PAYMENT_PROFILE_ACCT_NAME,
+             --       C021     INT_BANK_NAME,
+             --       C022     INT_BANK_NUMBER,
+             --       C023     INT_BIC,
+             --       C024     INT_BANK_BRANCH_NAME,
+             --       C025     INT_BANK_BRANCH_NUMBER,
+             --       C026     INT_BANK_ACCOUNT_NAME,
+             --       C027     INT_BANK_ACCOUNT_NUMBER,
+             --       C028     INT_BANK_ACCOUNT_IBAN,
+             --       C029     INT_EFT_SWIFT_CODE,
+             --       C030     PAYER_LEGAL_ENTITY_NAME,
+             --       C031     ORG_NAME,
+             --       C032     PAYEE_PARTY_NUMBER,
+             --       C033     PAYEE_SUPPLIER_NUMBER,
+             --       C034     EXTERNAL_BANK_ACCOUNT_ID,
+             --       C035     PAYMENT_PROFILE_ID,
+             --       C036     INTERNAL_BANK_ACCOUNT_ID,
+             --       C037     INT_BANK_BRANCH_PARTY_ID,
+             --       C038     INVOICING_LEGAL_ENTITY_ID,
+             --       C039     PAYMENT_ID,
+             --       C040     ORG_ID,
+             --       C041     LEGAL_ENTITY_ID,
+             --       C042     SET_OF_BOOKS_ID,
+             --       C043     EXT_PAYEE_ID,
+             --       C044     PAYER_PARTY_ID,
+             --       C045     PAYER_LOCATION_ID,
+             --       C046     PAYMENT_INSTRUCTION_ID,
+             C050
+                 PAYMENT_SERVICE_REQUEST_ID
+        FROM APEX_COLLECTIONS
+       WHERE 1 = 1 AND COLLECTION_NAME = 'SKL_PAYMENT_INSTRUCTIONS_C'
+    GROUP BY C001,
+             C002,
+             C003,
+             C006,
+             C008,
+             C009,
+             C013,
+             C050

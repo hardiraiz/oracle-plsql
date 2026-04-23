@@ -1,0 +1,43 @@
+/* Formatted on 10/10/2025 5:17:50 PM (QP5 v5.362) */
+CREATE OR REPLACE VIEW XXSKL_AP_PAYMENT_REQUEST_HDR_V
+AS
+      SELECT XAPHI.PAYMENT_INSTRUCTION_NUMBER,
+             --             XAP.PAYMENT_PROCESS_REQUEST_NAME     PAYMENT_PROCESS_REQUEST,
+             --             XAP.PAYMENT_DATE,
+             --             XAP.PAYMENT_DUE_DATE,
+             --             XAP.PAYMENT_CURRENCY_CODE,
+             XAP.INTERNAL_BANK_ACCOUNT_NUM,
+             XAP.INTERNAL_BANK_NAME,
+             COUNT (DISTINCT XAP.CHECK_ID)
+                 MANY_PAYMENTS,
+             COUNT (XINV.COUNT_INVOICE)
+                 MANY_INVOICES,
+             SUM (XAP.PAYMENT_AMOUNT)
+                 PAYMENT_AMOUNT,
+             XXSKL_AP_PAYMENT_INSTRUCTIONS_PKG.GET_STATUS_PAID (XAP.HEADER_ID)
+                 STATUS_PAID,
+             XAP.INTERNAL_BANK_ACCOUNT_ID,
+             --             XAP.PAYMENT_SERVICE_REQUEST_ID,
+             XAP.HEADER_ID
+        FROM XXSKL_AP_PAYMENT_HEADER_INSTRUCTIONS XAPHI,
+             XXSKL_AP_PAYMENT_INSTRUCTIONS       XAP,
+             (  SELECT COUNT (INVOICE_ID)     COUNT_INVOICE,
+                       PAYMENT_SERVICE_REQUEST_ID
+                  FROM XXSKL_AP_PAYMENT_INSTRUCTIONS
+                 WHERE 1 = 1
+              GROUP BY PAYMENT_SERVICE_REQUEST_ID) XINV
+       WHERE     1 = 1
+             AND XAP.PAYMENT_SERVICE_REQUEST_ID =
+                 XINV.PAYMENT_SERVICE_REQUEST_ID
+             --             AND XAP.IFACE_MODE IS NOT NULL
+             AND XAPHI.HEADER_ID = XAP.HEADER_ID
+    GROUP BY XAPHI.PAYMENT_INSTRUCTION_NUMBER,
+             --             XAP.PAYMENT_PROCESS_REQUEST_NAME,
+             --             XAP.PAYMENT_DATE,
+             --             XAP.PAYMENT_DUE_DATE,
+             --             XAP.PAYMENT_CURRENCY_CODE,
+             XAP.INTERNAL_BANK_ACCOUNT_NUM,
+             XAP.INTERNAL_BANK_NAME,
+             XAP.INTERNAL_BANK_ACCOUNT_ID,
+             --             XAP.PAYMENT_SERVICE_REQUEST_ID,
+             XAP.HEADER_ID

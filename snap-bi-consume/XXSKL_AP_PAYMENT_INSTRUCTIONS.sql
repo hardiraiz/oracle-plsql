@@ -1,0 +1,135 @@
+/* Formatted on 9/5/2025 1:24:25 PM (QP5 v5.362) */
+CREATE TABLE XXSKL_AP_PAYMENT_INSTRUCTIONS
+(
+    HEADER_ID                       NUMBER,
+    TRX_ID                          NUMBER,
+    PAYMENT_PROCESS_REQUEST_NAME    VARCHAR2 (200),
+    PAYMENT_DATE                    DATE,
+    PAYMENT_DUE_DATE                DATE,
+    PAYMENT_REFERENCE_NUMBER        NUMBER,
+    PAPER_DOCUMENT_NUMBER           NUMBER,
+    PAYMENT_CURRENCY_CODE           VARCHAR2 (10),
+    PAYMENT_AMOUNT                  NUMBER,
+    INTERNAL_BANK_ACCOUNT_NUM       VARCHAR2 (100),
+    INTERNAL_BANK_NAME              VARCHAR2 (100),
+    EXTERNAL_BANK_ACCOUNT_NUM       VARCHAR2 (100),
+    EXTERNAL_BANK_NAME              VARCHAR2 (100),
+    EXTERNAL_BANK_ACCOUNT_NAME      VARCHAR2 (100),
+    EXTERNAL_BANK_NUMBER            VARCHAR2 (100),
+    EXTERNAL_EFT_SWIFT_CODE         VARCHAR2 (100),
+    INQUIRY_BENEFICIARY_NAME        VARCHAR2 (300),
+    PAYEE_NAME                      VARCHAR2 (300),
+    PAYEE_PARTY_NAME                VARCHAR2 (300),
+    PAYEE_ADDRESS1                  VARCHAR2 (1000),
+    PAYEE_CITY                      VARCHAR2 (100),
+    PARTY_SITE_NAME                 VARCHAR2 (300),
+    PAYEE_ADDRESS_CONCAT            VARCHAR2 (1000),
+    PAYMENT_PROFILE_SYS_NAME        VARCHAR2 (100),
+    PAYMENT_PROFILE_ACCT_NAME       VARCHAR2 (100),
+    INT_BANK_NAME                   VARCHAR2 (100),
+    INT_BANK_NUMBER                 VARCHAR2 (30),
+    INT_BIC                         VARCHAR2 (30),
+    INT_BANK_BRANCH_NAME            VARCHAR2 (100),
+    INT_BANK_BRANCH_NUMBER          VARCHAR2 (100),
+    INT_BANK_ACCOUNT_NAME           VARCHAR2 (100),
+    INT_BANK_ACCOUNT_NUMBER         VARCHAR2 (100),
+    INT_BANK_ACCOUNT_IBAN           VARCHAR2 (100),
+    INT_EFT_SWIFT_CODE              VARCHAR2 (50),
+    INVOICE_NUM                     VARCHAR2 (100),
+    INVOICE_DATE                    DATE,
+    INVOICE_AMOUNT                  NUMBER,
+    PAYER_LEGAL_ENTITY_NAME         VARCHAR2 (30),
+    ORG_NAME                        VARCHAR2 (50),
+    PAYEE_PARTY_NUMBER              NUMBER,
+    PAYEE_SUPPLIER_NUMBER           VARCHAR2 (100),
+    MANUAL_DOC_TRANSFER             VARCHAR2 (200),
+    MANUAL_DOC_DESC                 VARCHAR2 (400),
+    EXTERNAL_BANK_ACCOUNT_ID        NUMBER,
+    PAYMENT_PROFILE_ID              NUMBER,
+    INTERNAL_BANK_ACCOUNT_ID        NUMBER,
+    INT_BANK_BRANCH_PARTY_ID        NUMBER,
+    EXT_BANK_BRANCH_PARTY_ID        NUMBER,
+    INVOICING_LEGAL_ENTITY_ID       NUMBER,
+    PAYMENT_ID                      NUMBER,
+    ORG_ID                          NUMBER,
+    LEGAL_ENTITY_ID                 NUMBER,
+    SET_OF_BOOKS_ID                 NUMBER,
+    EXT_PAYEE_ID                    NUMBER,
+    PAYER_PARTY_ID                  NUMBER,
+    PAYER_LOCATION_ID               NUMBER,
+    PAYMENT_INSTRUCTION_ID          NUMBER,
+    PAYEE_PARTY_ID                  NUMBER,
+    PARTY_SITE_ID                   NUMBER,
+    SUPPLIER_SITE_ID                NUMBER,
+    INVOICE_ID                      NUMBER,
+    CHECK_ID                        NUMBER,
+    PAYMENT_SERVICE_REQUEST_ID      NUMBER,
+    ATTRIBUTE_CATEGORY              VARCHAR2 (300),
+    ATTRIBUTE1                      VARCHAR2 (300),
+    ATTRIBUTE2                      VARCHAR2 (300),
+    ATTRIBUTE3                      VARCHAR2 (300),
+    ATTRIBUTE4                      VARCHAR2 (300),
+    ATTRIBUTE5                      VARCHAR2 (300),
+    ATTRIBUTE6                      VARCHAR2 (300),
+    ATTRIBUTE7                      VARCHAR2 (300),
+    ATTRIBUTE8                      VARCHAR2 (300),
+    ATTRIBUTE9                      VARCHAR2 (300),
+    ATTRIBUTE10                     VARCHAR2 (300),
+    ATTRIBUTE11                     VARCHAR2 (300),
+    ATTRIBUTE12                     VARCHAR2 (300),
+    ATTRIBUTE13                     VARCHAR2 (300),
+    ATTRIBUTE14                     VARCHAR2 (300),
+    ATTRIBUTE15                     VARCHAR2 (300),
+    IFACE_MODE                      VARCHAR2 (30),
+    IFACE_STATUS                    VARCHAR2 (100),
+    IFACE_MESSAGE                   VARCHAR2 (4000),
+    IFACE_ID                        VARCHAR2 (100),
+    GROUP_ID                        VARCHAR2 (80),
+    REQUEST_ID                      NUMBER,
+    EXTERNAL_ID                     VARCHAR2 (100),
+    PARTNER_REFERENCE               VARCHAR2 (100),
+    RELEASED_DATE                   DATE,
+    LOG_ID                          VARCHAR2 (100),
+    CREATED_BY                      VARCHAR2 (300),
+    CREATION_DATE                   DATE,
+    LAST_UPDATE_LOGIN               VARCHAR2 (300),
+    LAST_UPDATED_BY                 VARCHAR2 (300),
+    LAST_UPDATE_DATE                DATE,
+    LAST_SYNC_DATE                  DATE
+);
+
+CREATE UNIQUE INDEX XXSKL_AP_PAYMENT_INSTRUCTIONS_U1
+    ON XXSKL_AP_PAYMENT_INSTRUCTIONS (TRX_ID);
+/
+
+CREATE INDEX XXSKL_AP_PAYMENT_INSTRUCTIONS_N1
+    ON XXSKL_AP_PAYMENT_INSTRUCTIONS (PAYMENT_INSTRUCTION_ID);
+/
+
+CREATE OR REPLACE EDITIONABLE TRIGGER XXSKL_AP_PAYMENT_INSTRUCTIONS_TRG
+    BEFORE INSERT OR UPDATE
+    ON XXSKL_AP_PAYMENT_INSTRUCTIONS
+    REFERENCING NEW AS NEW OLD AS OLD
+    FOR EACH ROW
+BEGIN
+    IF INSERTING
+    THEN
+        :NEW.TRX_ID :=
+            NVL (:NEW.TRX_ID, XXSKL_AP_PAYMENT_INSTRUCTIONS_S.NEXTVAL);
+        :NEW.CREATED_BY := NVL (V ('APP_USER'), USER);
+        :NEW.CREATION_DATE := NVL (:NEW.CREATION_DATE, SYSDATE);
+    ELSIF UPDATING
+    THEN
+        :NEW.LAST_UPDATED_BY := NVL (V ('APP_USER'), USER);
+        :NEW.LAST_UPDATE_DATE := SYSDATE;
+    END IF;
+EXCEPTION
+    WHEN OTHERS
+    THEN
+        NULL;
+END XXSKL_AP_PAYMENT_INSTRUCTIONS_TRG;
+/
+
+ALTER TRIGGER XXSKL_AP_PAYMENT_INSTRUCTIONS_TRG
+    ENABLE;
+/

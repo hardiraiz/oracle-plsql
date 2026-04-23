@@ -1,0 +1,43 @@
+DROP JAVA SOURCE XXSKL."SKLSignSHA512HMAC";
+
+CREATE OR REPLACE AND RESOLVE JAVA SOURCE NAMED XXSKL."SKLSignSHA512HMAC"
+as import java.nio.charset.StandardCharsets;
+    import java.security.MessageDigest;
+    import java.security.NoSuchAlgorithmException;
+    import java.security.InvalidKeyException;
+    import javax.crypto.Mac;
+    import javax.crypto.spec.SecretKeySpec;
+    import java.util.Base64;
+
+    public class SKLSignSHA512HMAC {
+
+        public static String sign(String v_client_secret, String v_http_method, String v_url_x, String v_token,  String v_request_body, String v_timestamp) throws Exception {
+            String hexEncode;
+            if (v_request_body != null) {
+                hexEncode = hash256(v_request_body);
+            }
+            else {
+                hexEncode = v_request_body;
+            }
+            String stringToSign = v_http_method + ":" + v_url_x + ":" + v_token + ":" + hexEncode + ":" + v_timestamp;
+            return Base64.getEncoder().encodeToString(calculateHMACSHA512(stringToSign, v_client_secret));
+        }
+
+        public static String hash256(String input) throws NoSuchAlgorithmException {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            String hexStr = "";
+            for (int i = 0; i < hash.length; i++) {
+                hexStr += Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1);
+            }
+            return hexStr.toLowerCase().replace("-", "");
+        }
+
+        private static byte[] calculateHMACSHA512(String data, String key) throws NoSuchAlgorithmException, InvalidKeyException {
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), "HmacSHA512");
+            Mac mac = Mac.getInstance("HmacSHA512");
+            mac.init(secretKeySpec);
+            return mac.doFinal(data.getBytes());
+        }
+    }
+/
