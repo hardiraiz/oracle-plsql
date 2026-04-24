@@ -1,0 +1,7 @@
+-- Pada object broser create MLE environment
+-- Name: TEST
+-- Tambahkan MLE Module yang sudah di import dari URL
+
+
+-- Pada Shared Components > Application Definition > Security > Database Session > MLE Environment
+-- Tambahkan MLE Environment yang sudah dibuat

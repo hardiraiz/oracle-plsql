@@ -1,0 +1,1 @@
+apex.env.P5_STATUS !== "Closed"
