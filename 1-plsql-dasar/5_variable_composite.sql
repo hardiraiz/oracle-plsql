@@ -1,8 +1,10 @@
 -- ===== D. TIPE DATA COMPOSITE =====
 -- Tipe data composite dapat menyimpan lebih dari satu nilai dalam satu variabel dan memiliki struktur kompleks
 
--- 1. Record, seperti struktur dalam bahasa pemrograman lain
--- Example Case : Menyimpan data karyawan dalam satu variabel menggunakan RECORD
+/*
+  1. Record, seperti struktur dalam bahasa pemrograman lain
+  Example Case : Menyimpan data karyawan dalam satu variabel menggunakan RECORD
+*/
 DECLARE
   -- Mendefinisikan RECORD untuk menyimpan data karyawan
   TYPE emp_record IS RECORD (
@@ -31,10 +33,11 @@ END;
 
 -- Example Case : Membaca data karyawan dari tabel menggunakan %ROWTYPE
 -- Membuat tabel (Gunakan ini jika belum ada di database)
-CREATE TABLE employees (
-  emp_id NUMBER PRIMARY KEY,
-  emp_name VARCHAR2(100),
-  emp_salary NUMBER
+CREATE TABLE EMPLOYEES (
+  EMPLOYEE_ID   NUMBER PRIMARY KEY,
+  FIRST_NAME    VARCHAR2(50),
+  SALARY        NUMBER,
+  DEPARTMENT_ID NUMBER
 );
 
 -- Menambahkan contoh data
@@ -45,21 +48,23 @@ COMMIT;
 DECLARE
   v_employee employees%ROWTYPE;  -- RECORD berdasarkan struktur tabel
 BEGIN
-  -- Mengambil data dari tabel ke dalam RECORD
-  SELECT * INTO v_employee FROM employees WHERE emp_id = 101;
+  -- Mengambil data dari tabel ke dalam RECORD (Hanya Bisa untuk 1 row)
+  SELECT * INTO v_employee FROM employees WHERE EMPLOYEE_ID = 100;
 
   -- Menampilkan hasil
-  DBMS_OUTPUT.PUT_LINE('ID: ' || v_employee.emp_id);
-  DBMS_OUTPUT.PUT_LINE('Nama: ' || v_employee.emp_name);
-  DBMS_OUTPUT.PUT_LINE('Gaji: ' || v_employee.emp_salary);
+  DBMS_OUTPUT.PUT_LINE('ID: ' || v_employee.employee_id);
+  DBMS_OUTPUT.PUT_LINE('Nama: ' || v_employee.first_name);
+  DBMS_OUTPUT.PUT_LINE('Gaji: ' || v_employee.salary);
 END;
 /
 -- Kapan Menggunakan?
 -- ✅ Jika ingin menyimpan satu baris data dari tabel tanpa mendefinisikan struktur RECORD secara manual.
 
 
--- 2. Collection, digunakan untuk menyimpan kumpulan data
--- Example Case : Menyimpan beberapa nama karyawan dalam Nested Table dan menampilkan isinya.
+/* 
+  2. Collection, digunakan untuk menyimpan kumpulan data
+  Example Case : Menyimpan beberapa nama karyawan dalam Nested Table dan menampilkan isinya.
+*/
 DECLARE
   -- Mendefinisikan Nested Table untuk menyimpan daftar nama
   TYPE emp_table IS TABLE OF VARCHAR2(100);

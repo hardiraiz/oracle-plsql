@@ -1,10 +1,10 @@
 -- ===== A. TIPE DATA SCALAR =====
 -- 1. Tipe data numerik
 DECLARE
-  v_number NUMBER(10,2) := 1234.56;  -- Maksimal 10 digit, 2 desimal
-  v_integer PLS_INTEGER := 100;       -- Integer dengan performa lebih baik akan tetapi hanya untuk bilangan bulat
-  v_float BINARY_FLOAT := 3.14;       -- Floating point 32-bit
-  v_double BINARY_DOUBLE := 3.14159265358979;  -- Floating point 64-bit
+  v_number NUMBER(10,2) := 1234.56;           -- Maksimal 10 digit, 2 desimal
+  v_integer PLS_INTEGER := 100;               -- Integer dengan performa lebih baik akan tetapi hanya untuk bilangan bulat
+  v_float BINARY_FLOAT := 3.14;               -- Floating point 32-bit
+  v_double BINARY_DOUBLE := 3.14159265358979; -- Floating point 64-bit
 BEGIN
   DBMS_OUTPUT.PUT_LINE('Number: ' || v_number);
   DBMS_OUTPUT.PUT_LINE('PLS_INTEGER: ' || v_integer);
