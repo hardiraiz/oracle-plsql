@@ -5,8 +5,10 @@ GRANT EXECUTE ON DBMS_AQADM TO dev;
 ALTER USER dev QUOTA UNLIMITED ON USERS;
 /
 
+-- MEMBUAT QUEUE DAN START QUEUE
 BEGIN
     -- Queue keluar: Oracle Producer -> Kafka Connect Source -> Kafka
+    -- (Tetap FALSE karena hanya Kafka Connect yang akan membacanya)
     DBMS_AQADM.CREATE_SHARDED_QUEUE(
         queue_name          => 'dev.out_q',
         multiple_consumers  => FALSE,
@@ -15,15 +17,17 @@ BEGIN
     DBMS_AQADM.START_QUEUE(queue_name => 'dev.out_q');
 
     -- Queue masuk: Kafka -> Kafka Connect Sink -> Oracle Listener
+    -- (UBAH JADI TRUE agar mendukung model Subscriber/Callback)
     DBMS_AQADM.CREATE_SHARDED_QUEUE(
         queue_name          => 'dev.in_q',
-        multiple_consumers  => FALSE,
+        multiple_consumers  => TRUE, 
         queue_payload_type  => DBMS_AQADM.JMS_TYPE
     );
     DBMS_AQADM.START_QUEUE(queue_name => 'dev.in_q');
 END;
 /
 
+-- STOP DAN HAPUS QUEUE
 BEGIN
     -- 1. Hentikan dan Hapus Queue Keluar (dev.out_q)
     DBMS_AQADM.STOP_QUEUE(
@@ -43,6 +47,7 @@ BEGIN
 END;
 /
 
+-- LIHAT LIST ANTRIAN YANG ADA
 SELECT name, queue_type, enqueue_enabled, dequeue_enabled FROM user_queues;
 /
 
@@ -102,146 +107,111 @@ CREATE OR REPLACE PACKAGE BODY dev.producer_pkg AS
 END producer_pkg;
 /
 
-EXEC dev.producer_pkg.catat_transaksi('1234567890', 500000);
-/
-
-SELECT * FROM AQ$OUT_Q; -- Memastikan pesan masuk antrian
-/
-
 CREATE OR REPLACE PACKAGE dev.listener_pkg AS
 
-    PROCEDURE process_event(
-        p_payload IN VARCHAR2
+    -- Prosedur dengan format standar Oracle AQ Notification
+    PROCEDURE cb_process_event(
+        context  RAW,
+        reginfo  SYS.AQ$_REG_INFO,
+        descr    SYS.AQ$_DESCRIPTOR,
+        payload  RAW,
+        payloadl NUMBER
     );
-
-    PROCEDURE listen_loop;
 
 END listener_pkg;
 /
 
 CREATE OR REPLACE PACKAGE BODY dev.listener_pkg AS
 
-    PROCEDURE process_event(
-        p_payload IN VARCHAR2
+    PROCEDURE cb_process_event(
+        context  RAW,
+        reginfo  SYS.AQ$_REG_INFO,
+        descr    SYS.AQ$_DESCRIPTOR,
+        payload  RAW,
+        payloadl NUMBER
     ) IS
-        v_no_rekening transaksi.no_rekening%TYPE;
+        dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
+        message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
+        message_handle     RAW(16);
+        msg                SYS.AQ$_JMS_TEXT_MESSAGE;
+        v_text             VARCHAR2(32767);
+        v_no_rekening      VARCHAR2(20);
     BEGIN
+        -- 1. Beritahu Oracle pesan mana yang mau diambil berdasarkan trigger
+        dequeue_options.msgid         := descr.msg_id;
+        
+        -- 2. Ambil nama Consumer (Subscriber) dari deskriptor otomatis
+        dequeue_options.consumer_name := descr.consumer_name;
 
-        v_no_rekening := JSON_VALUE(
-            p_payload,
-            '$.noRekening'
-            RETURNING VARCHAR2(20)
+        -- 3. Eksekusi Dequeue
+        DBMS_AQ.DEQUEUE(
+            queue_name         => descr.queue_name,
+            dequeue_options    => dequeue_options,
+            message_properties => message_properties,
+            payload            => msg,
+            msgid              => message_handle
         );
 
-        IF v_no_rekening IS NULL THEN
-            RAISE_APPLICATION_ERROR(
-                -20001,
-                'noRekening tidak ditemukan dalam payload'
-            );
-        END IF;
+        -- 4. Ekstrak pesan JMS menjadi teks biasa
+        msg.get_text(v_text);
+
+        -- 5. Parsing JSON dan eksekusi logika bisnis (Update Transaksi)
+        v_no_rekening := JSON_VALUE(v_text, '$.noRekening');
 
         UPDATE transaksi
         SET status = 'NOTIFIED'
         WHERE no_rekening = v_no_rekening
           AND status = 'CREATED';
 
-    END process_event;
-
-
-    PROCEDURE listen_loop IS
-
-        dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
-        message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
-        message_handle     RAW(16);
-
-        msg                SYS.AQ$_JMS_TEXT_MESSAGE;
-        v_text             VARCHAR2(32767);
-
-    BEGIN
-
-        dequeue_options.wait := DBMS_AQ.FOREVER;
-
-        LOOP
-
-            BEGIN
-
-                DBMS_AQ.DEQUEUE(
-                    queue_name         => 'DEV.IN_Q',
-                    dequeue_options    => dequeue_options,
-                    message_properties => message_properties,
-                    payload            => msg,
-                    msgid              => message_handle
-                );
-
-                msg.get_text(v_text);
-
-                process_event(v_text);
-
-                COMMIT;
-
-            EXCEPTION
-
-                WHEN OTHERS THEN
-
-                    ROLLBACK;
-
-                    -- TODO:
-                    -- INSERT error ke tabel logging
-
-                    DBMS_OUTPUT.PUT_LINE(
-                        'Error: ' || SQLERRM
-                    );
-
-            END;
-
-        END LOOP;
-
-    END listen_loop;
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            -- Penting: Jangan biarkan error menghentikan trigger.
+            -- Anda bisa menambahkan fungsi simpan log error di sini.
+    END cb_process_event;
 
 END listener_pkg;
 /
 
-GRANT CREATE JOB TO dev;
-GRANT EXECUTE ON DBMS_SCHEDULER TO dev;
-
+-- DAFTAR SUBSCRIBER DAN CALLBACK UNTUK LISTENER
 BEGIN
-    DBMS_SCHEDULER.create_job(
-        job_name   => 'dev.listener_job',
-        job_type   => 'STORED_PROCEDURE',
-        job_action => 'dev.listener_pkg.listen_loop',
-        start_date => SYSTIMESTAMP,
-        enabled    => FALSE
+    -- 1. Tambahkan Subscriber (Beri nama bebas, misalnya 'TX_UPDATE_SVC')
+    DBMS_AQADM.ADD_SUBSCRIBER(
+        queue_name => 'dev.in_q',
+        subscriber => SYS.AQ$_AGENT('TX_UPDATE_SVC', NULL, 0)
     );
-    DBMS_SCHEDULER.set_attribute('dev.listener_job', 'restart_on_failure', TRUE);
-    DBMS_SCHEDULER.enable('dev.listener_job');
+
+    -- 2. Daftarkan Prosedur PL/SQL sebagai aksi (Callback) saat pesan masuk
+    DBMS_AQ.REGISTER(
+        SYS.AQ$_REG_INFO_LIST(
+            SYS.AQ$_REG_INFO(
+                'dev.in_q:TX_UPDATE_SVC', -- Format "nama_queue:nama_subscriber"
+                DBMS_AQ.NAMESPACE_AQ,
+                'plsql://dev.listener_pkg.cb_process_event', -- Panggil Package
+                HEXTORAW('FF')
+            )
+        ),
+        1
+    );
 END;
 /
-BEGIN
-    DBMS_SCHEDULER.drop_job(
-        job_name => 'dev.listener_job',
-        force    => TRUE
-    );
-END;
-/
 
-SELECT job_name, state FROM user_scheduler_jobs;
-/
-
-EXEC producer_pkg.catat_transaksi('000003', 100003);
-/
-
-SELECT no_rekening, status FROM transaksi;
+EXEC producer_pkg.catat_transaksi('000005', 100005);
 /
 
 SELECT * FROM aq$out_q;
 SELECT * FROM aq$in_q;
 /
 
-SELECT job_name, state, failure_count, last_start_date
-FROM user_scheduler_jobs 
-WHERE job_name = 'LISTENER_JOB';
+SELECT msg_id, enq_time, msg_state, consumer_name
+FROM dev.AQ$OUT_Q;
 /
 
+SELECT no_rekening, status FROM transaksi;
+/
+
+-- BLOCK ANONYMOUS UNTUK LISTENER (DEQUEUE + PROCESS_EVENT)
 DECLARE
     dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
     message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;

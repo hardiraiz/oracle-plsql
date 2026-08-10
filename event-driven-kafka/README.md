@@ -1,8 +1,8 @@
 # Studi Kasus: Oracle TxEventQ + Kafka Connect + Bun.js
 
-Panduan ini memakai pendekatan **native** karena container yang sudah Anda jalankan (Kafka, Kafka Connect, Zookeeper, dan Oracle Database Free 23ai) sudah lengkap untuk ini. Bedanya dengan pendekatan sebelumnya (outbox table + `APEX_WEB_SERVICE`): kali ini **PL/SQL tidak perlu tahu apa-apa soal HTTP atau Kafka** — Oracle cukup menulis/membaca pesan ke "kotak surat" internal (TxEventQ), dan **Kafka Connect** yang bertugas menjembatani kotak surat itu ke topic Kafka sungguhan, otomatis dan dua arah.
+Panduan ini memakai pendekatan **native** menggunakan container Kafka, Kafka Connect, Zookeeper, dan Oracle Database Free 23ai. Oracle cukup menulis/membaca pesan ke "kotak surat" internal (TxEventQ), dan **Kafka Connect** yang bertugas menjembatani kotak surat itu ke topic Kafka sungguhan, otomatis dan dua arah.
 
-NOTE: Jalankan sintaks dibawah untuk running ulang container secara bertahap setelah selesai install dan konfigurasi
+**NOTE**: Jalankan sintaks dibawah untuk running ulang container secara bertahap setelah selesai install dan konfigurasi
 ```bash
 docker start manual-db && sleep 20 && \
 docker start zookeeper && sleep 20 && \
@@ -43,7 +43,7 @@ Ini menutup siklus penuh: Oracle sebagai Producer dan Listener, Bun.js sebagai C
 
 ## 2. Persiapan Lingkungan Docker (Kafka + Kafka Connect)
 
-Kita akan membangun infrastruktur dari nol dan menghubungkannya ke `manual-db` dan `manual-ords` yang sudah ada. 
+Kita akan membangun infrastruktur dari nol dan menghubungkannya ke container oracle database free 23.26 dengan nama `manual-db` . 
 
 ### 2.1. Prasyarat
 
@@ -60,9 +60,7 @@ Container baru nanti dibuat lewat `docker compose` (punya network sendiri secara
 
 ```bash
 docker network create integration-net
-
 docker network connect integration-net manual-db
-docker network connect integration-net manual-ords
 
 ```
 
@@ -108,6 +106,9 @@ curl -O https://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar
 cd ..
 
 ```
+
+**NOTE**: Kafka Connect sebagai jembatan dua arah (karena sangat real-time berbasis event-push), arsitektur dengan tipe data JMS_TYPE sudah merupakan best-practice untuk ekosistem Confluent / Kafka standar.
+
 
 ### 2.5. `Dockerfile.kafka-connect` — Image Custom dengan Plugin Bawaan
 
@@ -248,7 +249,7 @@ docker exec -it kafka-connect bash -c "cat < /dev/null > /dev/tcp/manual-db/1521
 Jalankan sebagai `SYSTEM` atau `SYS` di dalam `manual-db`:
 
 ```sql
-CREATE USER dev IDENTIFIED BY "GantiPasswordIni123";
+CREATE USER dev IDENTIFIED BY "<<isi dengan password user dev>>";
 GRANT CONNECT, RESOURCE, AQ_ADMINISTRATOR_ROLE TO dev;
 GRANT EXECUTE ON DBMS_AQ TO dev;
 GRANT EXECUTE ON DBMS_AQADM TO dev;
@@ -273,7 +274,7 @@ BEGIN
     -- Queue masuk: Kafka -> Kafka Connect Sink -> Oracle Listener
     DBMS_AQADM.CREATE_SHARDED_QUEUE(
         queue_name          => 'dev.in_q',
-        multiple_consumers  => FALSE,
+        multiple_consumers  => TRUE,
         queue_payload_type  => DBMS_AQADM.JMS_TYPE
     );
     DBMS_AQADM.START_QUEUE(queue_name => 'dev.in_q');
@@ -376,7 +377,7 @@ END producer_pkg;
 ### 4.3. Uji Coba Manual
 
 ```sql
-EXEC dev.producer_pkg.catat_transaksi('1234567890', 500000);
+EXEC dev.producer_pkg.catat_transaksi('000001', 100001);
 SELECT * FROM AQ$OUT_Q; -- Memastikan pesan masuk antrian
 
 ```
@@ -385,24 +386,65 @@ SELECT * FROM AQ$OUT_Q; -- Memastikan pesan masuk antrian
 
 ## 5. Bagian Listener — PL/SQL Dequeue dari TxEventQ
 
-Supaya Oracle senantiasa "mendengarkan" pesan baru yang masuk, kita membuat `LOOP` yang berjalan terus-menerus menggunakan `DBMS_SCHEDULER`.
+PL/SQL Notifications (Event-Driven Asli) - BEST PRACTICE
+Oracle memiliki fitur di mana Listener tidur total. Oracle Database sendiri yang akan "membangunkan" (men-trigger) prosedur PL/SQL hanya pada saat ada pesan baru masuk ke antrean.
+
+- Kelebihan: Tidak memakan resource saat tidak ada pesan. Sangat hemat dan elegan. Skalabel.
+- Kekurangan: Ada jeda waktu (sekian milidetik) bagi Oracle untuk melakukan spawn job saat pesan tiba.
 
 ### 5.1. Package Listener
 
 ```sql
 CREATE OR REPLACE PACKAGE dev.listener_pkg AS
-    PROCEDURE process_event(p_payload IN VARCHAR2);
-    PROCEDURE listen_loop;
+
+    -- Prosedur dengan format standar Oracle AQ Notification
+    PROCEDURE cb_process_event(
+        context  RAW,
+        reginfo  SYS.AQ$_REG_INFO,
+        descr    SYS.AQ$_DESCRIPTOR,
+        payload  RAW,
+        payloadl NUMBER
+    );
+
 END listener_pkg;
 /
 
 CREATE OR REPLACE PACKAGE BODY dev.listener_pkg AS
 
-    PROCEDURE process_event(p_payload IN VARCHAR2) IS
-        v_no_rekening VARCHAR2(20);
+    PROCEDURE cb_process_event(
+        context  RAW,
+        reginfo  SYS.AQ$_REG_INFO,
+        descr    SYS.AQ$_DESCRIPTOR,
+        payload  RAW,
+        payloadl NUMBER
+    ) IS
+        dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
+        message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
+        message_handle     RAW(16);
+        msg                SYS.AQ$_JMS_TEXT_MESSAGE;
+        v_text             VARCHAR2(32767);
+        v_no_rekening      VARCHAR2(20);
     BEGIN
-        -- Parsing JSON sederhana
-        v_no_rekening := JSON_VALUE(p_payload, '$.noRekening');
+        -- 1. Beritahu Oracle pesan mana yang mau diambil berdasarkan trigger
+        dequeue_options.msgid         := descr.msg_id;
+        
+        -- 2. Ambil nama Consumer (Subscriber) dari deskriptor otomatis
+        dequeue_options.consumer_name := descr.consumer_name;
+
+        -- 3. Eksekusi Dequeue
+        DBMS_AQ.DEQUEUE(
+            queue_name         => descr.queue_name,
+            dequeue_options    => dequeue_options,
+            message_properties => message_properties,
+            payload            => msg,
+            msgid              => message_handle
+        );
+
+        -- 4. Ekstrak pesan JMS menjadi teks biasa
+        msg.get_text(v_text);
+
+        -- 5. Parsing JSON dan eksekusi logika bisnis (Update Transaksi)
+        v_no_rekening := JSON_VALUE(v_text, '$.noRekening');
 
         UPDATE transaksi
         SET status = 'NOTIFIED'
@@ -410,74 +452,50 @@ CREATE OR REPLACE PACKAGE BODY dev.listener_pkg AS
           AND status = 'CREATED';
 
         COMMIT;
-    END process_event;
-
-    PROCEDURE listen_loop IS
-        dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
-        message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
-        message_handle     RAW(16);
-        msg                SYS.AQ$_JMS_TEXT_MESSAGE;
-        v_text             VARCHAR2(32767);
-    BEGIN
-        dequeue_options.wait := DBMS_AQ.FOREVER; -- Tunggu pesan baru selamanya
-
-        LOOP
-            DBMS_AQ.DEQUEUE(
-                queue_name         => 'dev.in_q',
-                dequeue_options    => dequeue_options,
-                message_properties => message_properties,
-                payload            => msg,
-                msgid              => message_handle
-            );
-
-            msg.get_text(v_text);
-
-            BEGIN
-                process_event(v_text);
-            EXCEPTION
-                WHEN OTHERS THEN
-                    ROLLBACK;
-                    NULL; -- Log error di sini jika di environment produksi
-            END;
-        END LOOP;
-    END listen_loop;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            -- Penting: Jangan biarkan error menghentikan trigger.
+            -- Anda bisa menambahkan fungsi simpan log error di sini.
+    END cb_process_event;
 
 END listener_pkg;
 /
 
 ```
 
-### 5.2. Jalankan Sebagai Job Background
+### 5.2. Daftarkan Subscriber dan Callback untuk Listener
 
-Berikan akses user *dev* melalui sintaks berikut
-```sql
--- 1. Hak akses utama untuk membuat dan mengelola Scheduler Job di skema dev
-GRANT CREATE JOB TO dev;
-
--- 2. Hak akses eksekusi package DBMS_SCHEDULER 
--- (Secara default Oracle memberikan ini ke PUBLIC, namun perlu di-grant jika dibatasi)
-GRANT EXECUTE ON DBMS_SCHEDULER TO dev;
-
-```
-
-Setelah memberikan akses jalankan sintaks berikut
+Jalankan sintaks berikut untuk mendaftarkan subscriber listener
 ```sql
 BEGIN
-    DBMS_SCHEDULER.create_job(
-        job_name   => 'dev.listener_job',
-        job_type   => 'STORED_PROCEDURE',
-        job_action => 'dev.listener_pkg.listen_loop',
-        start_date => SYSTIMESTAMP,
-        enabled    => FALSE
+    -- 1. Tambahkan Subscriber (Beri nama bebas, misalnya 'TX_UPDATE_SVC')
+    DBMS_AQADM.ADD_SUBSCRIBER(
+        queue_name => 'dev.in_q',
+        subscriber => SYS.AQ$_AGENT('TX_UPDATE_SVC', NULL, 0)
     );
-    DBMS_SCHEDULER.set_attribute('dev.listener_job', 'restart_on_failure', TRUE);
-    DBMS_SCHEDULER.enable('dev.listener_job');
+
+    -- 2. Daftarkan Prosedur PL/SQL sebagai aksi (Callback) saat pesan masuk
+    DBMS_AQ.REGISTER(
+        SYS.AQ$_REG_INFO_LIST(
+            SYS.AQ$_REG_INFO(
+                'dev.in_q:TX_UPDATE_SVC', -- Format "nama_queue:nama_subscriber"
+                DBMS_AQ.NAMESPACE_AQ,
+                'plsql://dev.listener_pkg.cb_process_event', -- Panggil Package
+                HEXTORAW('FF')
+            )
+        ),
+        1
+    );
 END;
-/
 
 ```
 
-*(Statusnya akan menunjukkan `RUNNING` terus-menerus karena ini job listener: `SELECT job_name, state FROM user_scheduler_jobs;`)*
+**NOTE** : 
+1. Dengan menjalankan perintah di atas, mulai detik ini Oracle akan otomatis mengeksekusi cb_process_event di background (invisible) hanya jika ada pesan masuk ke in_q.
+2. Apa Keuntungannya Secara Arsitektur?
+  - Zero CPU Idle Cost: Saat tidak ada transaksi, listener_pkg tidak berjalan. Tidak memakan daya CPU dan tidak mengunci (lock) session database.
+  - Otomatis Skalabel: Jika tiba-tiba ada 100 pesan masuk dari Kafka Connect di detik yang sama, Oracle akan secara otomatis menjalankan banyak instance (proses background EMNC) dari cb_process_event secara paralel untuk menyelesaikan queue tersebut seketika.
 
 ---
 
@@ -501,7 +519,7 @@ Simpan file di mesin host dengan nama `source-connector.json`. Perhatikan bahwa 
     "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "db_url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "java.naming.security.principal": "dev",
-    "java.naming.security.credentials": "KatasandiKuat123!",
+    "java.naming.security.credentials": "<<isi dengan password user dev>>",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "kafka:29092",
     "confluent.topic.replication.factor": "1"
@@ -534,9 +552,9 @@ Simpan sebagai `sink-connector.json`:
     "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "db_url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "java.naming.security.principal": "dev",
-    "java.naming.security.credentials": "KatasandiKuat123!",
-    "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
-    "jms.destination.type": "queue",
+    "java.naming.security.credentials": "<<isi dengan password user dev>>",
+    "jndi.connection.factory": "javax.jms.XATopicConnectionFactory", 
+    "jms.destination.type": "topic", 
     "jms.destination.name": "in_q",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -660,8 +678,7 @@ SELECT no_rekening, status FROM transaksi WHERE no_rekening = '9988776655';
 
 ```
 
-
-**Hasilnya harus menunjukkan status = `'NOTIFIED'**`. Hal ini membuktikan siklus penuh (Oracle → Kafka Connect → Kafka → Bun.js → Kafka Connect → Oracle) telah berjalan sempurna.
+**Hasilnya harus menunjukkan status = `'NOTIFIED'`**. Hal ini membuktikan siklus penuh (Oracle → Kafka Connect → Kafka → Bun.js → Kafka Connect → Oracle) telah berjalan sempurna.
 
 ---
 
@@ -673,15 +690,51 @@ SELECT no_rekening, status FROM transaksi WHERE no_rekening = '9988776655';
 | Connector status `FAILED` (JNDI class not found) | File `.jar` Oracle tidak ada di path plugin. Cek ulang `Dockerfile` dan pastikan container dibangun dengan benar. |
 | Connector error koneksi ke `manual-db` | Container `manual-db` belum digabungkan ke network `integration-net` (Kembali ke Langkah 2.2). |
 | Bun.js tidak menerima pesan sama sekali | Source connector belum `RUNNING` atau topic belum terbuat otomatis di broker. Cek via `curl localhost:8083/connectors/txeventq-source/status`. |
-| Status transaksi tidak pernah berubah jadi `NOTIFIED` | Job listener (`listener_job`) belum `enabled`, Sink Connector mati, atau ada error parsing JSON di `process_event`. Cek `user_scheduler_job_run_details`. |
+| Status transaksi tidak pernah berubah jadi `NOTIFIED` | Callback Listener gagal tereksekusi. Pastikan antrean in_q di-set multiple_consumers => TRUE saat dibuat. Cek apakah Sink Connector mati, atau ada error parsing JSON di cb_process_event. Anda bisa memverifikasi apakah trigger background error dengan mengecek view DBA_AQ_NOTIFICATIONS atau alert log Oracle. |
 
 ---
 
-## 10. Perbandingan Singkat dengan Pendekatan Sebelumnya
+## 10. Tracing Event
 
-| Aspek | Outbox + REST Proxy (Panduan Pertama) | TxEventQ + Kafka Connect (Panduan Ini) |
-| --- | --- | --- |
-| **Kompleksitas PL/SQL** | Perlu tabel outbox, ACL, `APEX_WEB_SERVICE` | Cukup API native `DBMS_AQ.ENQUEUE`/`DEQUEUE` |
-| **Kompatibilitas Oracle** | Berjalan di versi lama (12c ke atas) | Butuh TxEventQ (21c+), sangat optimal di 23ai |
-| **Komponen Tambahan** | Hanya butuh job `DBMS_SCHEDULER` | Butuh Kafka Connect + JMS Connector |
-| **Paling Cocok Untuk** | Environment legacy / arsitektur lama | Arsitektur modern yang sudah berbasis event (seperti setup Docker Anda saat ini) |
+### 10.1. Melalui Oracle DB
+
+Untuk memeriksa apakah Oracle TXEventQ telah berhasil meneruskan message ke Kafka Connect gunakan sintaks berikut
+```sql
+SELECT msg_id, enq_time, msg_state, consumer_name
+FROM dev.AQ$OUT_Q;
+
+```
+
+Memahami kolom msg_state:
+  - `READY`: Pesan baru saja dikirim oleh PL/SQL (Producer) dan sedang menunggu Kafka Connect (atau consumer lain) untuk mengambilnya.
+
+  - `PROCESSED`: Pesan telah berhasil diambil dan diteruskan (dalam hal ini, Kafka Connect telah berhasil memindahkannya ke topik Kafka). Oracle menyimpan histori pesan yang sudah diproses selama beberapa waktu sebelum otomatis dihapus (tergantung konfigurasi retention antrean).
+
+  - `EXPIRED`: Pesan tidak diambil dalam batas waktu tertentu (jika ada masa kedaluwarsa).
+
+**Catatan:** Jika Anda menggunakan payload JSON murni, Anda juga bisa men-query kolom payload-nya. Namun, jika menggunakan JMS_TYPE, isi pesan (payload) disandikan sebagai tipe objek khusus.
+
+### 10.2. Melalui Kafka
+
+Jalankan perintah berikut untuk memeriksa message di kafka bahwa pesan telah diterima
+```bash
+docker exec -it kafka kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic transaksi.events \
+  --from-beginning
+
+```
+
+Jalankan perintah dibawah untuk melihat apakah pesan telah berhasil diteruskan
+```bash
+docker exec -it kafka kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --group notif-consumer \
+  --describe
+
+```
+
+Perintah tersebut akan menghasilkan tabel log. Perhatikan kolom LAG:
+  - Jika LAG = 0, itu adalah bukti nyata bahwa Bun.js telah membaca semua pesan (termasuk JSON transaksi di atas) dan sudah selaras dengan data terbaru di Kafka.
+
+  - Jika LAG > 0 (misal 5, 10), berarti pesan sudah ada di Kafka, tapi Bun.js belum sempat membacanya atau sedang mati (ada pesan yang belum diproses).
