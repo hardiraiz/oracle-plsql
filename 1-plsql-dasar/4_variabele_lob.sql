@@ -4,8 +4,8 @@
 -- 1. BLOB (Binary Large Object), menyimpan data biner seperti gambar, video, atau file
 -- a. Membuat tabel dengan kolom BLOB
 CREATE TABLE images (
-  id NUMBER PRIMARY KEY,
-  name VARCHAR2(100),
+  id    NUMBER PRIMARY KEY,
+  name  VARCHAR2(100),
   photo BLOB
 )
 /

@@ -41,7 +41,7 @@ CREATE TABLE EMPLOYEES (
 );
 
 -- Menambahkan contoh data
-INSERT INTO employees VALUES (101, 'Alice', 7000);
+INSERT INTO employees VALUES (101, 'Alice', 7000, 10);
 COMMIT;
 
 -- Menggunakan RECORD untuk menyimpan satu baris dari tabel
@@ -49,13 +49,71 @@ DECLARE
   v_employee employees%ROWTYPE;  -- RECORD berdasarkan struktur tabel
 BEGIN
   -- Mengambil data dari tabel ke dalam RECORD (Hanya Bisa untuk 1 row)
-  SELECT * INTO v_employee FROM employees WHERE EMPLOYEE_ID = 100;
+  SELECT * INTO v_employee FROM employees WHERE EMPLOYEE_ID = 101;
 
   -- Menampilkan hasil
   DBMS_OUTPUT.PUT_LINE('ID: ' || v_employee.employee_id);
   DBMS_OUTPUT.PUT_LINE('Nama: ' || v_employee.first_name);
   DBMS_OUTPUT.PUT_LINE('Gaji: ' || v_employee.salary);
 END;
+/
+
+-- Cara lain menggunakan RECORD untuk menyimpan data karyawan dari tabel
+DECLARE
+  TYPE t_emp IS RECORD (
+    emp_id NUMBER,
+    emp_name employees.first_name%TYPE,
+    emp_salary employees.salary%TYPE
+  );
+
+  r_emp t_emp;
+BEGIN
+  SELECT employee_id, first_name, salary
+  INTO r_emp
+  FROM employees
+  WHERE employee_id = 101;
+
+  DBMS_OUTPUT.PUT_LINE('ID: ' || r_emp.emp_id);
+  DBMS_OUTPUT.PUT_LINE('Nama: ' || r_emp.emp_name);
+  DBMS_OUTPUT.PUT_LINE('Gaji: ' || r_emp.emp_salary);
+END;
+/
+
+-- Menggunakan RECORD untuk INSERT data ke dalam tabel
+CREATE TABLE retired_employees AS SELECT * FROM employees WHERE 1=1; -- Membuat tabel kosong dengan struktur sama
+/
+DECLARE
+  r_emp employees%ROWTYPE;
+BEGIN
+  SELECT * INTO r_emp FROM employees WHERE employee_id = 101;
+
+  r_emp.salary        := 0;
+  r_emp.department_id := 0;
+
+  INSERT INTO retired_employees VALUES r_emp;
+  COMMIT;
+END;
+/
+SELECT * FROM retired_employees;
+/
+
+-- Mengunakan RECORD untuk UPDATE data di tabel
+DECLARE
+  r_emp employees%ROWTYPE;
+BEGIN
+  SELECT * INTO r_emp FROM employees WHERE employee_id = 101;
+
+  r_emp.salary        := r_emp.salary + 1000;
+  r_emp.department_id := 20;
+
+  UPDATE retired_employees SET row = r_emp WHERE employee_id = 101;
+  COMMIT;
+END;
+/
+SELECT * FROM retired_employees WHERE employee_id = 101;
+/
+DELETE FROM retired_employees;
+COMMIT;
 /
 -- Kapan Menggunakan?
 -- ✅ Jika ingin menyimpan satu baris data dari tabel tanpa mendefinisikan struktur RECORD secara manual.

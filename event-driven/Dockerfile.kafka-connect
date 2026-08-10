@@ -1,0 +1,9 @@
+FROM confluentinc/cp-kafka-connect:7.5.0
+
+USER root
+
+RUN confluent-hub install --no-prompt confluentinc/kafka-connect-jms:latest \
+ && confluent-hub install --no-prompt confluentinc/kafka-connect-jms-sink:latest
+
+COPY oracle-jms-jars/*.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/
+COPY oracle-jms-jars/*.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/

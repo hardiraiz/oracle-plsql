@@ -44,8 +44,8 @@ BEGIN
       v_salary_increase := 0.2;
       dbms_output.put_line('The salary increase for a Sales Manager is: '|| v_salary_increase);
     WHEN v_department = 'IT' AND v_job_code = 'IT_PROG' THEN
-      v_salary_increase := 0.2;
-      dbms_output.put_line('The salary increase for a Sales Manager is: '|| v_salary_increase);
+      v_salary_increase := 0.3;
+      dbms_output.put_line('The salary increase for an IT Programmer is: '|| v_salary_increase);
     ELSE
       v_salary_increase := 0;
       dbms_output.put_line('The salary increase for this job code is: '|| v_salary_increase);

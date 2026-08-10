@@ -23,6 +23,7 @@ CREATE TABLE DEPT_TABLE (
 /
 -- d. Insert data karyawan
 INSERT INTO EMP_TABLE VALUES (EMP_OBJ(101, 'Hardi Raiz'));
+COMMIT;
 /
 -- e. Menyisipkan Data ke dalam Tabel DEPT_TABLE
 DECLARE

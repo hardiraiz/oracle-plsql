@@ -1,0 +1,21 @@
+{
+  "name": "txeventq-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+    "tasks.max": "1",
+    "topics": "notifikasi.events",
+    "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
+    "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
+    "db_url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
+    "java.naming.security.principal": "dev",
+    "java.naming.security.credentials": "KatasandiKuat123!",
+    "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
+    "jms.destination.type": "queue",
+    "jms.destination.name": "in_q",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "kafka:29092",
+    "confluent.topic.replication.factor": "1",
+    "confluent.license": ""
+  }
+}
