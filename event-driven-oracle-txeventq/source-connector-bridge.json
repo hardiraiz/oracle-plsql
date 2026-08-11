@@ -1,0 +1,19 @@
+{
+  "name": "txeventq-source-bridge", 
+  "config": {
+    "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+    "kafka.topic": "bridge.events", 
+    "jms.destination.name": "KAFKA_OUTBOUND_Q", 
+    "jms.destination.type": "queue",
+    "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
+    "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
+    "db_url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
+    "java.naming.security.principal": "dev",
+    "java.naming.security.credentials": "KatasandiKuat123!",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "kafka:29092",
+    "confluent.topic.replication.factor": "1",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}
