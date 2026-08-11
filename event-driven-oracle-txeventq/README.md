@@ -4,6 +4,28 @@ Mari kita bedah secara mendalam, terurut, dan detail agar Anda bisa langsung men
 
 ---
 
+## 0. APEX Background Process vs TXEventQ vs Workflow
+
+1. **APEX Background Process** (DBMS_SCHEDULER)
+
+    - Karakteristik: Eksekusi asinkron sederhana di dalam lingkup APEX/Database.
+    - Kapan digunakan: Tugas berat yang mengunci UI (misal: generate report jutaan baris), logika murni PL/SQL, butuh native UI feedback (progress bar).
+    - Kelemahan: Sulit diintegrasikan dengan sistem eksternal, bukan untuk event-driven architecture, tidak memiliki state management kompleks.
+
+2. **Oracle TxEventQ** (Event-Driven)
+
+    - Karakteristik: Antrean pesan persisten, mendukung Pub/Sub, integrasi eksternal (Kafka, JMS).
+    - Kapan digunakan: Microservices, integrasi dengan aplikasi non-Oracle (Node.js, Java), high throughput, fire-and-forget dengan reliability tinggi, satu aksi memicu banyak proses berbeda di berbagai sistem.
+    - Kelemahan: Membutuhkan infrastruktur tambahan (Kafka Connect) untuk integrasi eksternal, kurva belajar lebih tinggi, tidak menyediakan UI state management bawaan APEX.
+
+3. **APEX Workflow** (State Machine/Business Process)
+
+    - Karakteristik: Mengelola siklus hidup proses bisnis yang panjang, melibatkan interaksi manusia, persetujuan multi-level.
+    - Kapan digunakan: Proses bisnis dengan tahapan yang jelas (misal: pengajuan cuti, onboarding karyawan), membutuhkan approval manual, penundaan berbasis waktu yang lama (menunggu respon user), pemantauan status proses (state machine).
+    - Kelemahan: Bukan untuk tugas komputasi background kecepatan tinggi atau fire-and-forget ke sistem eksternal tanpa state management.
+
+---
+
 ## 1. Konsep Dasar yang Wajib Dipahami
 
 Sebelum menulis kode, Anda harus memahami istilah-istilah ini dalam konteks TxEventQ:
@@ -15,7 +37,7 @@ Sebelum menulis kode, Anda harus memahami istilah-istilah ini dalam konteks TxEv
 * **Topic (Publish/Subscribe):** 1 pesan bisa dibaca oleh *banyak* Consumer secara independen.
 
 
-* **Subscriber (Menjawab pertanyaan Anda):**
+* **Subscriber**
 Subscriber adalah "Pendaftar". Jika Anda menggunakan model *Topic*, sebuah pesan tidak akan dikirim ke mana-mana jika tidak ada yang mendaftar. Anda mendaftarkan "Subscriber A" (misal: Layanan Notifikasi) dan "Subscriber B" (Layanan Poin). Ketika Producer mengirim 1 event, Oracle akan otomatis membuatkan salinan (secara logis) agar Subscriber A dan B bisa mengambil pesan tersebut di waktu mereka masing-masing tanpa saling mengganggu.
 
 ---
@@ -51,7 +73,7 @@ Pada studi kasus di bawah, kita akan menggunakan **Metode 2 (PL/SQL Notification
 ## 4. Studi Kasus: Sistem Registrasi User (Event-Driven)
 
 **Skenario:**
-Saat ada User baru mendaftar (`INSERT` ke tabel `USERS`), sistem tidak boleh langsung mengirim email atau menambah poin saat itu juga, karena akan membuat proses registrasi menjadi lambat (menunggu API email).
+Saat ada User baru mendaftar (`INSERT` ke tabel `USERS`), sistem tidak boleh langsung mengirim email atau menambah poin anggota saat itu juga, karena akan membuat proses registrasi menjadi lambat (menunggu API email).
 Sebagai gantinya, proses registrasi hanya melempar event `USER_REGISTERED` ke TxEventQ.
 Nanti, ada dua proses *background* (Subscriber) yang akan bekerja secara mandiri:
 
