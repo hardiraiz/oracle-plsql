@@ -578,7 +578,7 @@ END sp_reprocess_failed_events;
 
 ---
 
-### Langkah 4: Otomasi dengan Sweeper & Monitoring Job (Strategi 3)
+### Langkah 4: Otomasi dengan Sweeper & Monitoring Job
 
 Buat prosedur *Sweeper* yang akan mendeteksi event tersangkut (`READY` lebih dari 15 menit) sekaligus mengeksekusi reprocess event gagal secara otomatis.
 
@@ -664,8 +664,6 @@ ORDER BY
 ---
 
 ## 6. Integrasi TXEventQ (JSON) ke Kafka Connect (JMS)
-
-Pilihan yang sangat luar biasa! 
 
 Tahapan ini adalah tahapan tambahan, jika membuat event-driven di Oracle DB dengan tipe payload JSON kemudian ingin mengintegrasikannya ke Kafka melalui Kafka Connect yang menggunakan tipe payload JMS maka perlu dikonversi terlebih dahulu.
 

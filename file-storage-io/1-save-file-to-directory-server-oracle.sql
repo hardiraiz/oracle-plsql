@@ -13,14 +13,15 @@ SELECT * FROM all_directories WHERE directory_name = 'MY_DIR';
 
 -- ## 4. Buat table untuk log upload file ##
 CREATE TABLE file_upload_log (
-    id                  NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id                  NUMBER GENERATED ALWAYS AS IDENTITY,
     file_name           VARCHAR2(1000),
     file_name_server    VARCHAR2(1000),
     file_path           VARCHAR2(1000),
     file_size           NUMBER,
     mime_type           VARCHAR2(200),
     uploaded_by         VARCHAR2(100),
-    uploaded_at         TIMESTAMP DEFAULT SYSTIMESTAMP
+    uploaded_at         TIMESTAMP DEFAULT SYSTIMESTAMP,
+    CONSTRAINT file_upload_log_pk PRIMARY KEY (id)
 );
 
 -- ## 5. Buat page file uploader dengan process submit seperti dibawah
