@@ -3,7 +3,7 @@
   "config": {
     "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
     "kafka.topic": "transaksi.events",
-    "jms.destination.name": "out_q",
+    "jms.destination.name": "kafka_out_q",
     "jms.destination.type": "queue",
     "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
     "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",

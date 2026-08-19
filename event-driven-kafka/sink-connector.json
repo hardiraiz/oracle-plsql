@@ -11,7 +11,7 @@
     "java.naming.security.credentials": "KatasandiKuat123!",
     "jndi.connection.factory": "javax.jms.XATopicConnectionFactory", 
     "jms.destination.type": "topic", 
-    "jms.destination.name": "in_q",
+    "jms.destination.name": "kafka_in_q",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
     "confluent.topic.bootstrap.servers": "kafka:29092",

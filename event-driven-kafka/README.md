@@ -249,7 +249,6 @@ docker exec -it kafka-connect bash -c "cat < /dev/null > /dev/tcp/manual-db/1521
 Jalankan sebagai `SYSTEM` atau `SYS` di dalam `manual-db`:
 
 ```sql
-CREATE USER dev IDENTIFIED BY "<<isi dengan password user dev>>";
 GRANT CONNECT, RESOURCE, AQ_ADMINISTRATOR_ROLE TO dev;
 GRANT EXECUTE ON DBMS_AQ TO dev;
 GRANT EXECUTE ON DBMS_AQADM TO dev;
@@ -257,27 +256,45 @@ ALTER USER dev QUOTA UNLIMITED ON USERS;
 
 ```
 
-### 3.2. Buat Dua TxEventQ (Antrian Keluar dan Masuk)
+### 3.2. Buat Empat Antrian TxEventQ
+
+Kita akan membuat empat antrian 2 antrian utama untuk pesan keluar dan masuk dalam tipe data JSON dan 2 antrian jembatan masuk dan keluar ke Kafka dengan tipe data JMS
 
 Login sebagai `dev`, lalu eksekusi script ini:
 
 ```sql
 BEGIN
-    -- Queue keluar: Oracle Producer -> Kafka Connect Source -> Kafka
-    DBMS_AQADM.CREATE_SHARDED_QUEUE(
-        queue_name          => 'dev.out_q',
-        multiple_consumers  => FALSE,
-        queue_payload_type  => DBMS_AQADM.JMS_TYPE
+    -- 1. Antrean Utama Keluar Aplikasi (Tipe JSON)
+    DBMS_AQADM.CREATE_TRANSACTIONAL_EVENT_QUEUE(
+        queue_name         => 'dev.out_q', 
+        multiple_consumers => TRUE, 
+        queue_payload_type => 'JSON'
     );
     DBMS_AQADM.START_QUEUE(queue_name => 'dev.out_q');
+    
+    -- 2. Antrean Jembatan keluar Kafka (Tipe JMS)
+    DBMS_AQADM.CREATE_TRANSACTIONAL_EVENT_QUEUE(
+        queue_name         => 'dev.kafka_out_q', 
+        multiple_consumers => FALSE, 
+        queue_payload_type => DBMS_AQADM.JMS_TYPE
+    );
+    DBMS_AQADM.START_QUEUE(queue_name => 'dev.kafka_out_q');
 
-    -- Queue masuk: Kafka -> Kafka Connect Sink -> Oracle Listener
-    DBMS_AQADM.CREATE_SHARDED_QUEUE(
-        queue_name          => 'dev.in_q',
-        multiple_consumers  => TRUE,
-        queue_payload_type  => DBMS_AQADM.JMS_TYPE
+    -- 3. Antrean Utama Masuk Aplikasi (Tipe JSON)
+    DBMS_AQADM.CREATE_TRANSACTIONAL_EVENT_QUEUE(
+        queue_name         => 'dev.in_q', 
+        multiple_consumers => TRUE, 
+        queue_payload_type => 'JSON'
     );
     DBMS_AQADM.START_QUEUE(queue_name => 'dev.in_q');
+
+    -- 4. Antrean Jembatan masuk Kafka (Tipe JMS)
+    DBMS_AQADM.CREATE_TRANSACTIONAL_EVENT_QUEUE(
+        queue_name         => 'dev.kafka_in_q', 
+        multiple_consumers => TRUE, 
+        queue_payload_type => DBMS_AQADM.JMS_TYPE
+    );
+    DBMS_AQADM.START_QUEUE(queue_name => 'dev.kafka_in_q');
 END;
 /
 
@@ -286,7 +303,6 @@ END;
 Berikut sintaks untuk membatalkan sintaks diatas
 ```sql
 BEGIN
-    -- 1. Hentikan dan Hapus Queue Keluar (dev.out_q)
     DBMS_AQADM.STOP_QUEUE(
         queue_name => 'dev.out_q'
     );
@@ -294,14 +310,28 @@ BEGIN
         queue_name => 'dev.out_q'
     );
 
-    -- 2. Hentikan dan Hapus Queue Masuk (dev.in_q)
     DBMS_AQADM.STOP_QUEUE(
         queue_name => 'dev.in_q'
     );
     DBMS_AQADM.DROP_QUEUE(
         queue_name => 'dev.in_q'
     );
+
+    DBMS_AQADM.STOP_QUEUE(
+        queue_name => 'dev.kafka_in_q'
+    );
+    DBMS_AQADM.DROP_QUEUE(
+        queue_name => 'dev.kafka_in_q'
+    );
+
+    DBMS_AQADM.STOP_QUEUE(
+        queue_name => 'dev.kafka_out_q'
+    );
+    DBMS_AQADM.DROP_QUEUE(
+        queue_name => 'dev.kafka_out_q'
+    );
 END;
+/
 
 ```
 
@@ -328,37 +358,33 @@ CREATE TABLE transaksi (
 `DBMS_AQ.ENQUEUE` ini setara dengan `KafkaProducer.send()` di sisi Oracle.
 
 ```sql
-CREATE OR REPLACE PACKAGE dev.producer_pkg AS
+create or replace PACKAGE producer_pkg AS
     PROCEDURE catat_transaksi(p_no_rekening IN VARCHAR2, p_nominal IN NUMBER);
 END producer_pkg;
 /
 
-CREATE OR REPLACE PACKAGE BODY dev.producer_pkg AS
+create or replace PACKAGE BODY producer_pkg AS
 
     PROCEDURE catat_transaksi(p_no_rekening IN VARCHAR2, p_nominal IN NUMBER) IS
         enqueue_options    DBMS_AQ.ENQUEUE_OPTIONS_T;
         message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
         message_handle     RAW(16);
         msg                SYS.AQ$_JMS_TEXT_MESSAGE;
-        v_payload          VARCHAR2(4000);
+        v_payload          JSON;
     BEGIN
         -- 1. Logika bisnis utama
         INSERT INTO transaksi (no_rekening, nominal)
         VALUES (p_no_rekening, p_nominal);
 
         -- 2. Susun payload JSON sederhana
-        v_payload := '{"eventType":"TRANSACTION_CREATED","noRekening":"' || p_no_rekening ||
-                      '","nominal":' || p_nominal || '}';
+        v_payload := JSON('{"eventType":"TRANSACTION_CREATED","noRekening":"' || p_no_rekening || '","nominal":' || p_nominal || '}');
 
         -- 3. ENQUEUE -- ini yang membuat Oracle jadi Producer
-        msg := SYS.AQ$_JMS_TEXT_MESSAGE.construct;
-        msg.set_text(v_payload);
-
         DBMS_AQ.ENQUEUE(
             queue_name         => 'dev.out_q',
             enqueue_options    => enqueue_options,
             message_properties => message_properties,
-            payload            => msg,
+            payload            => v_payload,
             msgid              => message_handle
         );
 
@@ -384,7 +410,171 @@ SELECT * FROM AQ$OUT_Q; -- Memastikan pesan masuk antrian
 
 ---
 
-## 5. Bagian Listener — PL/SQL Dequeue dari TxEventQ
+## 5. Tambahkan Logika Jembatan
+
+Buat prosedur *Listener* baru yang otomatis menerjemahkan JSON ke JMS dan sebaliknya.
+
+Buat table untuk menampung event yang gagal di distribusikan
+``` sql
+CREATE TABLE tb_failed_events (
+    fail_id       NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    queue_name    VARCHAR2(50),
+    consumer_name VARCHAR2(50),
+    msg_id        RAW(16),
+    payload       JSON,
+    error_msg     VARCHAR2(4000),
+    retry_count   NUMBER DEFAULT 0,
+    max_retry     NUMBER DEFAULT 3,
+    status        VARCHAR2(20) DEFAULT 'FAILED', -- FAILED, RETRIED, DEAD_LETTER, ALARM
+    created_at    TIMESTAMP DEFAULT SYSTIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT SYSTIMESTAMP
+);
+/
+
+```
+
+Tambahkan procedure jembatan keluar berikut
+```sql
+create or replace PROCEDURE cb_bridge_out(
+    context  RAW,
+    reginfo  SYS.AQ$_REG_INFO,
+    descr    SYS.AQ$_DESCRIPTOR,
+    payload  RAW,
+    payloadl NUMBER
+) AS
+    -- Variabel Dequeue (Membaca JSON)
+    v_deq_opt          DBMS_AQ.DEQUEUE_OPTIONS_T;
+    v_msg_props_in     DBMS_AQ.MESSAGE_PROPERTIES_T;
+    v_msg_id_in        RAW(16);
+    v_payload_json     JSON;
+    v_json_string      VARCHAR2(4000);
+
+    -- Variabel Enqueue (Mengirim JMS)
+    v_enq_opt          DBMS_AQ.ENQUEUE_OPTIONS_T;
+    v_msg_props_out    DBMS_AQ.MESSAGE_PROPERTIES_T;
+    v_msg_id_out       RAW(16);
+    v_payload_jms      SYS.AQ$_JMS_TEXT_MESSAGE;
+
+    v_error_msg        VARCHAR2(4000);
+    v_queue_name       VARCHAR2(128);
+BEGIN
+    -- 1. DEQUEUE dari antrean JSON
+    v_deq_opt.consumer_name := 'BRIDGE_OUT_SVC';
+    v_deq_opt.msgid         := descr.msg_id;
+
+    DBMS_AQ.DEQUEUE(
+        queue_name         => descr.queue_name, -- Ini akan bernilai 'dev.out_q'
+        dequeue_options    => v_deq_opt,
+        message_properties => v_msg_props_in,
+        payload            => v_payload_json,
+        msgid              => v_msg_id_in
+    );
+
+    -- 2. KONVERSI (JSON -> VARCHAR2 -> SYS.AQ$_JMS_TEXT_MESSAGE)
+    v_json_string := JSON_SERIALIZE(v_payload_json);
+    v_payload_jms := SYS.AQ$_JMS_TEXT_MESSAGE.construct;
+    v_payload_jms.set_text(v_json_string);
+
+    -- 3. ENQUEUE ke antrean jembatan JMS untuk dibaca Kafka Connect
+    DBMS_AQ.ENQUEUE(
+        queue_name         => 'dev.kafka_out_q',
+        enqueue_options    => v_enq_opt,
+        message_properties => v_msg_props_out,
+        payload            => v_payload_jms,
+        msgid              => v_msg_id_out
+    );
+
+    -- 4. SAHKAN TRANSAKSI
+    COMMIT;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+
+        v_error_msg  := SUBSTR('Error di Bridge Out: ' || SQLERRM, 1, 4000);
+        v_queue_name := descr.queue_name;
+
+        INSERT INTO dev.tb_failed_events (queue_name, consumer_name, error_msg)
+        VALUES (v_queue_name, 'BRIDGE_OUT_SVC', v_error_msg);
+
+        COMMIT;
+END cb_bridge_out;
+/
+
+```
+
+Tambahkan procedure jembatan masuk berikut
+```sql
+create or replace PROCEDURE cb_bridge_in(
+    context  RAW, 
+    reginfo  SYS.AQ$_REG_INFO, 
+    descr    SYS.AQ$_DESCRIPTOR,
+    payload  RAW, 
+    payloadl NUMBER
+) AS
+    v_deq_opt          DBMS_AQ.DEQUEUE_OPTIONS_T;
+    v_msg_props_in     DBMS_AQ.MESSAGE_PROPERTIES_T;
+    v_msg_id_in        RAW(16);
+
+    v_payload_jms      SYS.AQ$_JMS_TEXT_MESSAGE;
+    v_json_string      VARCHAR2(32767);
+
+    v_enq_opt          DBMS_AQ.ENQUEUE_OPTIONS_T;
+    v_msg_props_out    DBMS_AQ.MESSAGE_PROPERTIES_T;
+    v_msg_id_out       RAW(16);
+    v_payload_json     JSON;
+
+    v_error_msg        VARCHAR2(4000);
+    v_queue_name       VARCHAR2(128);
+BEGIN
+    -- 1. Dequeue dari JMS
+    v_deq_opt.consumer_name := 'BRIDGE_IN_SVC';
+    v_deq_opt.msgid         := descr.msg_id;
+
+    DBMS_AQ.DEQUEUE('dev.kafka_in_q', v_deq_opt, v_msg_props_in, v_payload_jms, v_msg_id_in);
+
+    IF v_payload_jms IS NULL THEN COMMIT; RETURN; END IF;
+
+    -- 2. Ekstrak string JMS
+    v_json_string := v_payload_jms.text_vc;
+    IF v_json_string IS NULL AND v_payload_jms.text_lob IS NOT NULL THEN
+        v_json_string := DBMS_LOB.SUBSTR(v_payload_jms.text_lob, 4000, 1);
+    END IF;
+
+    IF v_json_string IS NULL THEN COMMIT; RETURN; END IF;
+
+    -- 3. Konversi ke native JSON
+    v_payload_json := JSON(v_json_string);
+
+    -- 4. Enqueue ke in_q
+    DBMS_AQ.ENQUEUE(
+        queue_name         => 'dev.in_q',
+        enqueue_options    => v_enq_opt,
+        message_properties => v_msg_props_out, 
+        payload            => v_payload_json,
+        msgid              => v_msg_id_out
+    );
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+
+        v_error_msg  := SUBSTR('Error di Bridge In: ' || SQLERRM, 1, 4000);
+        v_queue_name := descr.queue_name;
+
+        INSERT INTO dev.tb_failed_events (queue_name, consumer_name, error_msg)
+        VALUES (v_queue_name, 'BRIDGE_IN_SVC', v_error_msg);
+
+        COMMIT;
+END cb_bridge_in;
+/
+
+```
+
+---
+
+## 6. Bagian Listener — PL/SQL Dequeue dari TxEventQ
 
 PL/SQL Notifications (Event-Driven Asli) - BEST PRACTICE
 Oracle memiliki fitur di mana Listener tidur total. Oracle Database sendiri yang akan "membangunkan" (men-trigger) prosedur PL/SQL hanya pada saat ada pesan baru masuk ke antrean.
@@ -392,11 +582,11 @@ Oracle memiliki fitur di mana Listener tidur total. Oracle Database sendiri yang
 - Kelebihan: Tidak memakan resource saat tidak ada pesan. Sangat hemat dan elegan. Skalabel.
 - Kekurangan: Ada jeda waktu (sekian milidetik) bagi Oracle untuk melakukan spawn job saat pesan tiba.
 
-### 5.1. Package Listener
+### 6.1. Package Listener
 
 ```sql
-CREATE OR REPLACE PACKAGE dev.listener_pkg AS
-
+create or replace PACKAGE     listener_pkg AS
+    
     -- Prosedur dengan format standar Oracle AQ Notification
     PROCEDURE cb_process_event(
         context  RAW,
@@ -409,7 +599,7 @@ CREATE OR REPLACE PACKAGE dev.listener_pkg AS
 END listener_pkg;
 /
 
-CREATE OR REPLACE PACKAGE BODY dev.listener_pkg AS
+create or replace PACKAGE BODY listener_pkg AS
 
     PROCEDURE cb_process_event(
         context  RAW,
@@ -418,45 +608,54 @@ CREATE OR REPLACE PACKAGE BODY dev.listener_pkg AS
         payload  RAW,
         payloadl NUMBER
     ) IS
-        dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
-        message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
-        message_handle     RAW(16);
-        msg                SYS.AQ$_JMS_TEXT_MESSAGE;
-        v_text             VARCHAR2(32767);
-        v_no_rekening      VARCHAR2(20);
-    BEGIN
-        -- 1. Beritahu Oracle pesan mana yang mau diambil berdasarkan trigger
-        dequeue_options.msgid         := descr.msg_id;
-        
-        -- 2. Ambil nama Consumer (Subscriber) dari deskriptor otomatis
-        dequeue_options.consumer_name := descr.consumer_name;
+        v_dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
+        v_message_properties DBMS_AQ.MESSAGE_PROPERTIES_T;
+        v_message_handle     RAW(16);
+        v_payload            JSON;           
 
-        -- 3. Eksekusi Dequeue
+        v_no_rekening        VARCHAR2(20);
+        v_error_msg          VARCHAR2(4000);
+        v_queue_name         VARCHAR2(128);
+    BEGIN
+        -- 1. Siapkan opsi DEQUEUE berdasarkan trigger yang dikirim Oracle
+        v_dequeue_options.msgid         := descr.msg_id;
+        v_dequeue_options.consumer_name := descr.consumer_name;
+
+        -- 2. Eksekusi DEQUEUE dari antrean (dev.in_q)
         DBMS_AQ.DEQUEUE(
             queue_name         => descr.queue_name,
-            dequeue_options    => dequeue_options,
-            message_properties => message_properties,
-            payload            => msg,
-            msgid              => message_handle
+            dequeue_options    => v_dequeue_options,
+            message_properties => v_message_properties,
+            payload            => v_payload,
+            msgid              => v_message_handle
         );
 
-        -- 4. Ekstrak pesan JMS menjadi teks biasa
-        msg.get_text(v_text);
+        -- 3. Parsing JSON dan Eksekusi Logika Bisnis
+        -- Karena v_payload sudah bertipe JSON, kita bisa langsung ekstrak datanya
+        v_no_rekening := JSON_VALUE(v_payload, '$.noRekening');
 
-        -- 5. Parsing JSON dan eksekusi logika bisnis (Update Transaksi)
-        v_no_rekening := JSON_VALUE(v_text, '$.noRekening');
-
+        -- Lakukan Update status pada tabel transaksi
         UPDATE transaksi
         SET status = 'NOTIFIED'
         WHERE no_rekening = v_no_rekening
           AND status = 'CREATED';
 
+        -- 4. SAHKAN TRANSAKSI
         COMMIT;
+
     EXCEPTION
         WHEN OTHERS THEN
             ROLLBACK;
-            -- Penting: Jangan biarkan error menghentikan trigger.
-            -- Anda bisa menambahkan fungsi simpan log error di sini.
+
+            -- Tangkap error dengan aman
+            v_error_msg  := SUBSTR('Error di Listener Utama: ' || SQLERRM, 1, 4000);
+            v_queue_name := descr.queue_name;
+
+            -- Catat error ke tabel log agar tidak hilang dan antrean tetap jalan
+            INSERT INTO dev.tb_failed_events (queue_name, consumer_name, error_msg)
+            VALUES (v_queue_name, descr.consumer_name, v_error_msg);
+
+            COMMIT;
     END cb_process_event;
 
 END listener_pkg;
@@ -464,30 +663,66 @@ END listener_pkg;
 
 ```
 
-### 5.2. Daftarkan Subscriber dan Callback untuk Listener
+### 6.2. Daftarkan Subscriber dan Callback untuk Listener
 
 Jalankan sintaks berikut untuk mendaftarkan subscriber listener
 ```sql
 BEGIN
-    -- 1. Tambahkan Subscriber (Beri nama bebas, misalnya 'TX_UPDATE_SVC')
+    -- 1. Minta jembatan keluar mendengarkan out_q
     DBMS_AQADM.ADD_SUBSCRIBER(
-        queue_name => 'dev.in_q',
-        subscriber => SYS.AQ$_AGENT('TX_UPDATE_SVC', NULL, 0)
+        queue_name => 'dev.out_q', 
+        subscriber => SYS.AQ$_AGENT('BRIDGE_OUT_SVC', NULL, 0)
     );
 
-    -- 2. Daftarkan Prosedur PL/SQL sebagai aksi (Callback) saat pesan masuk
     DBMS_AQ.REGISTER(
         SYS.AQ$_REG_INFO_LIST(
             SYS.AQ$_REG_INFO(
-                'dev.in_q:TX_UPDATE_SVC', -- Format "nama_queue:nama_subscriber"
+                'dev.out_q:BRIDGE_OUT_SVC', 
+                DBMS_AQ.NAMESPACE_AQ, 
+                'plsql://dev.cb_bridge_out', 
+                HEXTORAW('FF')
+            )
+        ), 
+        1
+    );
+
+    -- 2. Tambahkan Subscriber khusus untuk Listener Utama
+    DBMS_AQADM.ADD_SUBSCRIBER(
+        queue_name => 'dev.in_q',
+        subscriber => SYS.AQ$_AGENT('MAIN_LISTENER_SVC', NULL, 0)
+    );
+
+    DBMS_AQ.REGISTER(
+        SYS.AQ$_REG_INFO_LIST(
+            SYS.AQ$_REG_INFO(
+                'dev.in_q:MAIN_LISTENER_SVC',
                 DBMS_AQ.NAMESPACE_AQ,
-                'plsql://dev.listener_pkg.cb_process_event', -- Panggil Package
+                'plsql://dev.listener_pkg.cb_process_event',
+                HEXTORAW('FF')
+            )
+        ),
+        1
+    );
+
+    -- 3. Minta jembatan masuk mendengarkan kafka_in_q
+    DBMS_AQADM.ADD_SUBSCRIBER(
+        queue_name => 'dev.kafka_in_q',
+        subscriber => SYS.AQ$_AGENT('BRIDGE_IN_SVC', NULL, 0)
+    );
+
+    DBMS_AQ.REGISTER(
+        SYS.AQ$_REG_INFO_LIST(
+            SYS.AQ$_REG_INFO(
+                'dev.kafka_in_q:BRIDGE_IN_SVC',
+                DBMS_AQ.NAMESPACE_AQ,
+                'plsql://dev.cb_bridge_in',
                 HEXTORAW('FF')
             )
         ),
         1
     );
 END;
+/
 
 ```
 
@@ -499,11 +734,11 @@ END;
 
 ---
 
-## 6. Menjembatani TxEventQ ⇄ Kafka dengan Kafka Connect
+## 7. Menjembatani TxEventQ ⇄ Kafka dengan Kafka Connect
 
 Berkat setup di Bagian 2, plugin dan `.jar` sudah otomatis terpasang. Anda cukup meluncurkan konfigurasi Source & Sink Connector lewat REST API-nya.
 
-### 6.1. Konfigurasi Source Connector (TxEventQ → Kafka)
+### 7.1. Konfigurasi Source Connector (TxEventQ → Kafka)
 
 Simpan file di mesin host dengan nama `source-connector.json`. Perhatikan bahwa `confluent.topic.bootstrap.servers` kini mengarah ke `kafka:29092` (sesuai network internal Docker).
 
@@ -513,7 +748,7 @@ Simpan file di mesin host dengan nama `source-connector.json`. Perhatikan bahwa 
   "config": {
     "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
     "kafka.topic": "transaksi.events",
-    "jms.destination.name": "out_q",
+    "jms.destination.name": "kafka_out_q",
     "jms.destination.type": "queue",
     "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
     "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
@@ -522,7 +757,9 @@ Simpan file di mesin host dengan nama `source-connector.json`. Perhatikan bahwa 
     "java.naming.security.credentials": "<<isi dengan password user dev>>",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "kafka:29092",
-    "confluent.topic.replication.factor": "1"
+    "confluent.topic.replication.factor": "1",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
   }
 }
 
@@ -537,7 +774,7 @@ curl -X POST -H "Content-Type: application/json" \
 
 ```
 
-### 6.2. Konfigurasi Sink Connector (Kafka → TxEventQ)
+### 7.2. Konfigurasi Sink Connector (Kafka → TxEventQ)
 
 Simpan sebagai `sink-connector.json`:
 
@@ -552,10 +789,10 @@ Simpan sebagai `sink-connector.json`:
     "java.naming.provider.url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "db_url": "jdbc:oracle:thin:@//manual-db:1521/FREEPDB1",
     "java.naming.security.principal": "dev",
-    "java.naming.security.credentials": "<<isi dengan password user dev>>",
+    "java.naming.security.credentials": "KatasandiKuat123!",
     "jndi.connection.factory": "javax.jms.XATopicConnectionFactory", 
     "jms.destination.type": "topic", 
-    "jms.destination.name": "in_q",
+    "jms.destination.name": "kafka_in_q",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
     "confluent.topic.bootstrap.servers": "kafka:29092",
@@ -575,7 +812,7 @@ curl -X POST -H "Content-Type: application/json" \
 
 ```
 
-### 6.3. Cek Status Kedua Connector
+### 7.3. Cek Status Kedua Connector
 
 ```bash
 curl -s localhost:8083/connectors/txeventq-source/status
@@ -594,9 +831,9 @@ curl -X DELETE localhost:8083/connectors/txeventq-sink
 
 ---
 
-## 7. Bun.js: Consumer + Producer
+## 8. Bun.js: Consumer + Producer
 
-### 7.1. Setup Project
+### 8.1. Setup Project
 
 ```bash
 mkdir notif-service && cd notif-service
@@ -605,7 +842,7 @@ bun add kafkajs
 
 ```
 
-### 7.2. Kode Lengkap (`index.ts`)
+### 8.2. Kode Lengkap (`index.ts`)
 
 ```typescript
 import { Kafka } from "kafkajs";
@@ -625,13 +862,19 @@ async function run() {
 
   await consumer.run({
     eachMessage: async ({ message }) => {
-      const event = JSON.parse(message.value?.toString() ?? "{}");
-      console.log(`[notif] Transaksi diterima:`, event);
+      const wrapper = JSON.parse(message.value?.toString() ?? "{}");
 
-      // Simulasi pengiriman notifikasi ke nasabah
+      // dengan schemas.enable=false, teks JMS langsung di wrapper.text (bukan wrapper.payload.text)
+      const rawText = wrapper.text;
+      if (!rawText) {
+        console.error("[notif] Pesan tanpa field text, dilewati:", wrapper);
+        return;
+      }
+      const event = JSON.parse(rawText);
+
+      console.log(`[notif] Transaksi diterima:`, event);
       console.log(`[notif] Mengirim notifikasi ke rekening ${event.noRekening}...`);
 
-      // Publish event balasan (Produce)
       await producer.send({
         topic: "notifikasi.events",
         messages: [{
@@ -660,7 +903,7 @@ bun run index.ts
 
 ---
 
-## 8. Uji Coba End-to-End
+## 9. Uji Coba End-to-End
 
 1. Jalankan `bun run index.ts` di terminal terpisah dan biarkan berjalan.
 
@@ -682,7 +925,7 @@ SELECT no_rekening, status FROM transaksi WHERE no_rekening = '9988776655';
 
 ---
 
-## 9. Troubleshooting Umum
+## 10. Troubleshooting Umum
 
 | Gejala | Kemungkinan penyebab |
 | --- | --- |
@@ -694,9 +937,9 @@ SELECT no_rekening, status FROM transaksi WHERE no_rekening = '9988776655';
 
 ---
 
-## 10. Tracing Event
+## 11. Tracing Event
 
-### 10.1. Melalui Oracle DB
+### 11.1. Melalui Oracle DB
 
 Untuk memeriksa apakah Oracle TXEventQ telah berhasil meneruskan message ke Kafka Connect gunakan sintaks berikut
 ```sql
@@ -714,7 +957,7 @@ Memahami kolom msg_state:
 
 **Catatan:** Jika Anda menggunakan payload JSON murni, Anda juga bisa men-query kolom payload-nya. Namun, jika menggunakan JMS_TYPE, isi pesan (payload) disandikan sebagai tipe objek khusus.
 
-### 10.2. Melalui Kafka
+### 11.2. Melalui Kafka
 
 Jalankan perintah berikut untuk memeriksa message di kafka bahwa pesan telah diterima
 ```bash
