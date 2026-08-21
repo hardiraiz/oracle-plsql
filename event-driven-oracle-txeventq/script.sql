@@ -280,42 +280,16 @@ BEGIN
 END;
 /
 
-ALTER PROCEDURE cb_point_service COMPILE;
-GRANT EXECUTE ON cb_point_service TO PUBLIC;
-REVOKE EXECUTE ON cb_point_service FROM PUBLIC;
+EXEC register_user('budi@example.com');
+SELECT * FROM tb_users;
+SELECT * FROM tb_email_logs;
 /
 
-DECLARE
-    v_dequeue_options    DBMS_AQ.DEQUEUE_OPTIONS_T;
-    v_message_props      DBMS_AQ.MESSAGE_PROPERTIES_T;
-    v_msg_id             RAW(16);
-    v_payload            JSON;
-    v_user_id            NUMBER;
-BEGIN
-    -- Menyamar sebagai Point Service
-    v_dequeue_options.consumer_name := 'POINT_SERVICE';
-    
-    -- Ambil pesan teratas yang berstatus READY
-    DBMS_AQ.DEQUEUE(
-        queue_name         => 'USER_EVENT_Q',
-        dequeue_options    => v_dequeue_options,
-        message_properties => v_message_props,
-        payload            => v_payload,
-        msgid              => v_msg_id
-    );
 
-    -- Logika update point
-    v_user_id := JSON_VALUE(v_payload, '$.user_id');
-    
-    UPDATE tb_users 
-    SET points = points + 50 
-    WHERE user_id = v_user_id;
 
-    COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Pesan yang nyangkut berhasil diproses manual!');
-END;
-/
 
+
+-- ====================================================================
 -- 1. Tabel Idempotency (Mencegah eksekusi ganda saat retry)
 CREATE TABLE tb_processed_events (
     msg_id        RAW(16),
@@ -500,6 +474,9 @@ BEGIN
         COMMIT;
     END IF;
 END sp_sweeper_job;
+/
+
+GRANT CREATE JOB TO dev;
 /
 
 BEGIN

@@ -249,6 +249,7 @@ docker exec -it kafka-connect bash -c "cat < /dev/null > /dev/tcp/manual-db/1521
 Jalankan sebagai `SYSTEM` atau `SYS` di dalam `manual-db`:
 
 ```sql
+CREATE USER dev IDENTIFIED BY "KatasandiKuat123!";
 GRANT CONNECT, RESOURCE, AQ_ADMINISTRATOR_ROLE TO dev;
 GRANT EXECUTE ON DBMS_AQ TO dev;
 GRANT EXECUTE ON DBMS_AQADM TO dev;

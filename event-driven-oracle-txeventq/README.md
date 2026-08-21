@@ -615,6 +615,11 @@ END sp_sweeper_job;
 Daftarkan prosedur *Sweeper* ini ke `DBMS_SCHEDULER` agar berjalan otomatis setiap 15 menit:
 
 ```sql
+-- grant access scheduler ke user dev, jalankan sebagai sys
+GRANT CREATE JOB TO dev;
+/
+
+-- daftarkan scheduler, jalankan sebagai user dev
 BEGIN
     DBMS_SCHEDULER.create_job(
         job_name        => 'JOB_TXEVENTQ_SWEEPER',

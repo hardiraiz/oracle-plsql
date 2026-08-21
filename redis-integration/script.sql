@@ -13,6 +13,7 @@ BEGIN
 END;
 /
 
+DROP TABLE products;
 CREATE TABLE products (
   product_id     NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_name   VARCHAR2(100) NOT NULL,
@@ -29,6 +30,7 @@ COMMIT;
 --------------------------------------------------------------------------------
 -- PACKAGE SPECIFICATION
 --------------------------------------------------------------------------------
+DROP PACKAGE redis_utltcp_pkg;
 CREATE OR REPLACE PACKAGE redis_utltcp_pkg AS
 
   -- Konfigurasi koneksi Redis (sesuaikan dengan environment Anda)
@@ -296,6 +298,7 @@ END redis_utltcp_pkg;
 
 SET DEFINE OFF;
 
+DROP FUNCTION get_products_filtered;
 CREATE OR REPLACE FUNCTION get_products_filtered(
   p_search_name VARCHAR2 DEFAULT NULL,
   p_limit       NUMBER   DEFAULT 50,
@@ -355,6 +358,7 @@ BEGIN
 END get_products_filtered;
 /
 
+DROP FUNCTION get_product_by_id;
 CREATE OR REPLACE FUNCTION get_product_by_id(p_product_id NUMBER) RETURN CLOB IS
   l_cache_key VARCHAR2(100);
   l_cached    VARCHAR2(4000);
@@ -393,6 +397,7 @@ BEGIN
 END get_product_by_id;
 /
 
+DROP TRIGGER trg_products_cache_invalidate;
 CREATE OR REPLACE TRIGGER trg_products_cache_invalidate
 AFTER UPDATE OR DELETE ON products
 FOR EACH ROW

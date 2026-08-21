@@ -141,7 +141,7 @@ END;
 
 ## Tahap 3: DDL Tabel Master
 
-Login sebagai `POC_USER`. Kita akan menggunakan tabel `products`.
+Login sebagai `DEV`. Kita akan menggunakan tabel `products`.
 
 ```sql
 CREATE TABLE products (
