@@ -1,0 +1,5 @@
+oracle.install.responseFileVersion=/oracle/install/rspfmt_gateway_install_response_schema_v23.0.0
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/opt/oracle/oraInventory
+ORACLE_HOME=/opt/oracle/product/23ai/gateway
+ORACLE_BASE=/opt/oracle

@@ -1,0 +1,76 @@
+Pre-authentication banner message from server:
+| WARNING: AUTHORIZED ACCESS ONLY
+| ===============================
+|
+| This system is the property of Bank Jakarta.
+| It is for authorized use only.
+|
+| All activities on this system may be monitored,
+| recorded, and audited. By accessing this system,
+| you agree to abide by the organization's
+| Acceptable Use Policy.
+|
+| Unauthorized use is strictly prohibited and may
+| be subject to criminal prosecution. If you are
+| not an authorized user, disconnect immediately.
+End of banner message from server
+dev@10.119.48.26's password:
+    +----------------------------------------------------------------------+
+    ¦                 • MobaXterm Personal Edition v26.4 •                 ¦
+    ¦               (SSH client, X server and network tools)               ¦
+    ¦                                                                      ¦
+    ¦ ? SSH session to dev@10.119.48.26                                    ¦
+    ¦   • Direct SSH      :  ?                                             ¦
+    ¦   • SSH compression :  ?                                             ¦
+    ¦   • SSH-browser     :  ?                                             ¦
+    ¦   • X11-forwarding  :  ?  (disabled or not supported by server)      ¦
+    ¦                                                                      ¦
+    ¦ ? For more info, ctrl+click on help or visit our website.            ¦
+    +----------------------------------------------------------------------+
+
+Last login: Thu Jul 30 17:10:59 2026 from 10.42.110.225
+[dev@dvr-prtplu-web01 ~]$ sudo su
+[sudo] password for dev:
+[root@dvr-prtplu-web01 dev]# /u01/app/oraInventory/orainstRoot.sh
+Changing permissions of /u01/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /u01/app/oraInventory to oinstall.
+The execution of the script is complete.
+[root@dvr-prtplu-web01 dev]# /u01/app/oracle/product/26ai/gateway/root.sh
+Check /u01/app/oracle/product/26ai/gateway/install/root_dvr-prtplu-web01.bjkt.co.id_2026-07-30_20-52-04-294081395.log for the output of root script
+[root@dvr-prtplu-web01 dev]#
+[root@dvr-prtplu-web01 dev]# tail 100f /u01/app/oracle/product/26ai/gateway/install/root_dvr-prtplu-web01.bjkt.co.id_2026-07-30_20-52-04-294081395.log
+tail: cannot open '100f' for reading: No such file or directory
+==> /u01/app/oracle/product/26ai/gateway/install/root_dvr-prtplu-web01.bjkt.co.id_2026-07-30_20-52-04-294081395.log <==
+   Copying dbhome to /usr/local/bin ...
+   Copying oraenv to /usr/local/bin ...
+   Copying coraenv to /usr/local/bin ...
+
+
+Creating /etc/oratab file...
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+[root@dvr-prtplu-web01 dev]# tail -100f /u01/app/oracle/product/26ai/gateway/install/root_dvr-prtplu-web01.bjkt.co.id_2026-07-30_20-52-04-294081395.log
+Performing root user operation.
+
+The following environment variables are set as:
+    ORACLE_OWNER= oracle
+    ORACLE_HOME=  /u01/app/oracle/product/26ai/gateway
+   Copying dbhome to /usr/local/bin ...
+   Copying oraenv to /usr/local/bin ...
+   Copying coraenv to /usr/local/bin ...
+
+
+Creating /etc/oratab file...
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+^C
+[root@dvr-prtplu-web01 dev]# hostname -i
+fe80::546f:90ff:fe9b:127%enp2s0 10.119.48.26
+[root@dvr-prtplu-web01 dev]#

@@ -1,0 +1,1024 @@
+Pre-authentication banner message from server:
+| WARNING: AUTHORIZED ACCESS ONLY
+| ===============================
+|
+| This system is the property of Bank Jakarta.
+| It is for authorized use only.
+|
+| All activities on this system may be monitored,
+| recorded, and audited. By accessing this system,
+| you agree to abide by the organization's
+| Acceptable Use Policy.
+|
+| Unauthorized use is strictly prohibited and may
+| be subject to criminal prosecution. If you are
+| not an authorized user, disconnect immediately.
+End of banner message from server
+dev@10.119.48.26's password:
+    +----------------------------------------------------------------------+
+    ¦                 • MobaXterm Personal Edition v26.4 •                 ¦
+    ¦               (SSH client, X server and network tools)               ¦
+    ¦                                                                      ¦
+    ¦ ? SSH session to dev@10.119.48.26                                    ¦
+    ¦   • Direct SSH      :  ?                                             ¦
+    ¦   • SSH compression :  ?                                             ¦
+    ¦   • SSH-browser     :  ?                                             ¦
+    ¦   • X11-forwarding  :  ?  (disabled or not supported by server)      ¦
+    ¦                                                                      ¦
+    ¦ ? For more info, ctrl+click on help or visit our website.            ¦
+    +----------------------------------------------------------------------+
+
+Last login: Thu Jul 30 16:06:08 2026 from 10.37.70.248
+[dev@dvr-prtplu-web01 ~]$ sudo su
+[sudo] password for dev:
+Sorry, try again.
+[sudo] password for dev:
+[root@dvr-prtplu-web01 dev]#
+[root@dvr-prtplu-web01 dev]# cd Installer/
+[root@dvr-prtplu-web01 Installer]# ls -ltrh
+total 23M
+drwxr-xr-x. 2 dev dev 4.0K Jul 29 01:24 postgresql-odbc-dep
+-rw-r--r--. 1 dev dev  23M Jul 29 16:53 postgresql-odbc-offline-dep.tar.gz
+-rw-r--r--. 1 dev dev  26K Jul 29 16:54 oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.zip
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# unzip -oq oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.zip
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# l- -l
+bash: l-: command not found
+[root@dvr-prtplu-web01 Installer]# ll
+total 23312
+-rw-rw-rw-. 1 root root    35302 Jul 29 09:42 oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.rpm
+-rw-r--r--. 1 dev  dev     26621 Jul 29 16:54 oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.zip
+drwxr-xr-x. 2 dev  dev      4096 Jul 29 01:24 postgresql-odbc-dep
+-rw-r--r--. 1 dev  dev  23801838 Jul 29 16:53 postgresql-odbc-offline-dep.tar.gz
+[root@dvr-prtplu-web01 Installer]# yum repolist all
+Updating Subscription Management repositories.
+
+The system clock is skewed. There is a time difference of 25254.0 seconds with the entitlement server. Please check your clock settings to ensure access to all entitled content.
+
+repo id                                        repo name                                                               status
+rhel-9-for-x86_64-appstream-rpms               Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)                enabled
+rhel-9-for-x86_64-baseos-rpms                  Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)                   enabled
+[root@dvr-prtplu-web01 Installer]# yum localinstall oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.rpm
+Updating Subscription Management repositories.
+
+The system clock is skewed. There is a time difference of 25254.0 seconds with the entitlement server. Please check your clock settings to ensure access to all entitled content.
+
+Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)                                       94 kB/s | 4.5 kB     00:00
+Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)                                          89 kB/s | 4.1 kB     00:00
+Dependencies resolved.
+==============================================================================================================================
+ Package                                 Arch        Version                      Repository                             Size
+==============================================================================================================================
+Installing:
+ oracle-ai-database-preinstall-26ai      x86_64      1.0-1.el9                    @commandline                           34 k
+Installing dependencies:
+ bc                                      x86_64      1.07.1-14.el9                rhel-9-for-x86_64-baseos-rpms         125 k
+ chkconfig                               x86_64      1.24-2.el9                   rhel-9-for-x86_64-baseos-rpms         182 k
+ compat-openssl11                        x86_64      1:1.1.1k-5.el9_8.4           rhel-9-for-x86_64-appstream-rpms      1.5 M
+ fontconfig                              x86_64      2.14.0-2.el9_1               rhel-9-for-x86_64-appstream-rpms      301 k
+ freetype                                x86_64      2.10.4-10.el9_5              rhel-9-for-x86_64-baseos-rpms         389 k
+ glibc-devel                             x86_64      2.34-274.el9_8               rhel-9-for-x86_64-appstream-rpms       45 k
+ glibc-headers                           x86_64      2.34-274.el9_8               rhel-9-for-x86_64-appstream-rpms      554 k
+ graphite2                               x86_64      1.3.14-9.el9                 rhel-9-for-x86_64-baseos-rpms          98 k
+ gssproxy                                x86_64      0.8.4-7.el9                  rhel-9-for-x86_64-baseos-rpms         114 k
+ harfbuzz                                x86_64      2.7.4-10.el9                 rhel-9-for-x86_64-baseos-rpms         629 k
+ initscripts                             x86_64      10.11.8-4.el9                rhel-9-for-x86_64-baseos-rpms         232 k
+ kernel-headers                          x86_64      5.14.0-687.30.1.el9_8        rhel-9-for-x86_64-appstream-rpms      2.8 M
+ ksh                                     x86_64      3:1.0.6-15.el9               rhel-9-for-x86_64-appstream-rpms      884 k
+ libICE                                  x86_64      1.0.10-8.el9                 rhel-9-for-x86_64-appstream-rpms       73 k
+ libSM                                   x86_64      1.2.3-10.el9                 rhel-9-for-x86_64-appstream-rpms       44 k
+ libX11                                  x86_64      1.8.12-1.el9                 rhel-9-for-x86_64-appstream-rpms      652 k
+ libX11-common                           noarch      1.8.12-1.el9                 rhel-9-for-x86_64-appstream-rpms      197 k
+ libX11-xcb                              x86_64      1.8.12-1.el9                 rhel-9-for-x86_64-appstream-rpms       10 k
+ libXau                                  x86_64      1.0.9-8.el9                  rhel-9-for-x86_64-appstream-rpms       34 k
+ libXcomposite                           x86_64      0.4.5-7.el9                  rhel-9-for-x86_64-appstream-rpms       26 k
+ libXext                                 x86_64      1.3.4-8.el9                  rhel-9-for-x86_64-appstream-rpms       42 k
+ libXi                                   x86_64      1.7.10-8.el9                 rhel-9-for-x86_64-appstream-rpms       41 k
+ libXinerama                             x86_64      1.1.4-10.el9                 rhel-9-for-x86_64-appstream-rpms       17 k
+ libXmu                                  x86_64      1.1.3-8.el9                  rhel-9-for-x86_64-appstream-rpms       78 k
+ libXrandr                               x86_64      1.5.2-8.el9                  rhel-9-for-x86_64-appstream-rpms       30 k
+ libXrender                              x86_64      0.9.10-16.el9_8.1            rhel-9-for-x86_64-appstream-rpms       32 k
+ libXt                                   x86_64      1.2.0-6.el9                  rhel-9-for-x86_64-appstream-rpms      182 k
+ libXtst                                 x86_64      1.2.3-16.el9                 rhel-9-for-x86_64-appstream-rpms       23 k
+ libXv                                   x86_64      1.0.11-16.el9                rhel-9-for-x86_64-appstream-rpms       21 k
+ libXxf86dga                             x86_64      1.1.5-8.el9                  rhel-9-for-x86_64-appstream-rpms       23 k
+ libXxf86vm                              x86_64      1.1.4-18.el9                 rhel-9-for-x86_64-appstream-rpms       21 k
+ libdmx                                  x86_64      1.1.4-14.el9                 rhel-9-for-x86_64-appstream-rpms       16 k
+ libev                                   x86_64      4.33-6.el9                   rhel-9-for-x86_64-baseos-rpms          55 k
+ libnfsidmap                             x86_64      1:2.5.4-42.el9_8             rhel-9-for-x86_64-baseos-rpms          68 k
+ libpng                                  x86_64      2:1.6.37-15.el9_8.2          rhel-9-for-x86_64-baseos-rpms         122 k
+ libverto-libev                          x86_64      0.3.2-3.el9                  rhel-9-for-x86_64-baseos-rpms          15 k
+ libxcb                                  x86_64      1.13.1-9.el9                 rhel-9-for-x86_64-appstream-rpms      247 k
+ libxcrypt-devel                         x86_64      4.4.18-3.el9                 rhel-9-for-x86_64-appstream-rpms       32 k
+ lm_sensors-libs                         x86_64      3.6.0-10.el9                 rhel-9-for-x86_64-appstream-rpms       44 k
+ nfs-utils                               x86_64      1:2.5.4-42.el9_8             rhel-9-for-x86_64-baseos-rpms         469 k
+ pcp-conf                                x86_64      6.3.7-8.el9_8                rhel-9-for-x86_64-appstream-rpms       38 k
+ pcp-libs                                x86_64      6.3.7-8.el9_8                rhel-9-for-x86_64-appstream-rpms      653 k
+ quota                                   x86_64      1:4.09-4.el9                 rhel-9-for-x86_64-baseos-rpms         202 k
+ quota-nls                               noarch      1:4.09-4.el9                 rhel-9-for-x86_64-baseos-rpms          79 k
+ rpcbind                                 x86_64      1.2.6-7.el9                  rhel-9-for-x86_64-baseos-rpms          62 k
+ smartmontools                           x86_64      1:7.2-10.el9                 rhel-9-for-x86_64-baseos-rpms         563 k
+ sssd-nfs-idmap                          x86_64      2.9.8-4.el9_8.1              rhel-9-for-x86_64-baseos-rpms          42 k
+ sysstat                                 x86_64      12.5.4-11.el9                rhel-9-for-x86_64-appstream-rpms      487 k
+ xorg-x11-utils                          x86_64      7.5-40.el9                   rhel-9-for-x86_64-appstream-rpms      115 k
+ xorg-x11-xauth                          x86_64      1:1.1-10.el9                 rhel-9-for-x86_64-appstream-rpms       38 k
+
+Transaction Summary
+==============================================================================================================================
+Install  51 Packages
+
+Total size: 13 M
+Total download size: 12 M
+Installed size: 34 M
+Is this ok [y/N]: y
+Downloading Packages:
+(1/50): libXext-1.3.4-8.el9.x86_64.rpm                                                        707 kB/s |  42 kB     00:00
+(2/50): libXtst-1.2.3-16.el9.x86_64.rpm                                                       285 kB/s |  23 kB     00:00
+(3/50): libXt-1.2.0-6.el9.x86_64.rpm                                                          2.1 MB/s | 182 kB     00:00
+(4/50): libXxf86dga-1.1.5-8.el9.x86_64.rpm                                                     44 kB/s |  23 kB     00:00
+(5/50): libXv-1.0.11-16.el9.x86_64.rpm                                                         39 kB/s |  21 kB     00:00
+(6/50): libXrandr-1.5.2-8.el9.x86_64.rpm                                                       58 kB/s |  30 kB     00:00
+(7/50): libxcrypt-devel-4.4.18-3.el9.x86_64.rpm                                               1.1 MB/s |  32 kB     00:00
+(8/50): libICE-1.0.10-8.el9.x86_64.rpm                                                        2.1 MB/s |  73 kB     00:00
+(9/50): libXi-1.7.10-8.el9.x86_64.rpm                                                         1.2 MB/s |  41 kB     00:00
+(10/50): libSM-1.2.3-10.el9.x86_64.rpm                                                        1.5 MB/s |  44 kB     00:00
+(11/50): xorg-x11-xauth-1.1-10.el9.x86_64.rpm                                                 809 kB/s |  38 kB     00:00
+(12/50): libXmu-1.1.3-8.el9.x86_64.rpm                                                        2.6 MB/s |  78 kB     00:00
+(13/50): lm_sensors-libs-3.6.0-10.el9.x86_64.rpm                                              880 kB/s |  44 kB     00:00
+(14/50): libXau-1.0.9-8.el9.x86_64.rpm                                                        1.3 MB/s |  34 kB     00:00
+(15/50): libXcomposite-0.4.5-7.el9.x86_64.rpm                                                  68 kB/s |  26 kB     00:00
+(16/50): libxcb-1.13.1-9.el9.x86_64.rpm                                                       8.4 MB/s | 247 kB     00:00
+(17/50): libXxf86vm-1.1.4-18.el9.x86_64.rpm                                                    53 kB/s |  21 kB     00:00
+(18/50): libXinerama-1.1.4-10.el9.x86_64.rpm                                                   45 kB/s |  17 kB     00:00
+(19/50): libX11-common-1.8.12-1.el9.noarch.rpm                                                7.1 MB/s | 197 kB     00:00
+(20/50): ksh-1.0.6-15.el9.x86_64.rpm                                                           26 MB/s | 884 kB     00:00
+(21/50): libX11-1.8.12-1.el9.x86_64.rpm                                                        20 MB/s | 652 kB     00:00
+(22/50): xorg-x11-utils-7.5-40.el9.x86_64.rpm                                                 267 kB/s | 115 kB     00:00
+(23/50): fontconfig-2.14.0-2.el9_1.x86_64.rpm                                                 695 kB/s | 301 kB     00:00
+(24/50): pcp-conf-6.3.7-8.el9_8.x86_64.rpm                                                    1.3 MB/s |  38 kB     00:00
+(25/50): pcp-libs-6.3.7-8.el9_8.x86_64.rpm                                                     19 MB/s | 653 kB     00:00
+(26/50): sysstat-12.5.4-11.el9.x86_64.rpm                                                      17 MB/s | 487 kB     00:00
+(27/50): libX11-xcb-1.8.12-1.el9.x86_64.rpm                                                    27 kB/s |  10 kB     00:00
+(28/50): libXrender-0.9.10-16.el9_8.1.x86_64.rpm                                              955 kB/s |  32 kB     00:00
+(29/50): glibc-devel-2.34-274.el9_8.x86_64.rpm                                                1.0 MB/s |  45 kB     00:00
+(30/50): glibc-headers-2.34-274.el9_8.x86_64.rpm                                               16 MB/s | 554 kB     00:00
+(31/50): kernel-headers-5.14.0-687.30.1.el9_8.x86_64.rpm                                       41 MB/s | 2.8 MB     00:00
+(32/50): bc-1.07.1-14.el9.x86_64.rpm                                                          4.6 MB/s | 125 kB     00:00
+(33/50): graphite2-1.3.14-9.el9.x86_64.rpm                                                    1.0 MB/s |  98 kB     00:00
+(34/50): libverto-libev-0.3.2-3.el9.x86_64.rpm                                                613 kB/s |  15 kB     00:00
+(35/50): libdmx-1.1.4-14.el9.x86_64.rpm                                                        36 kB/s |  16 kB     00:00
+(36/50): rpcbind-1.2.6-7.el9.x86_64.rpm                                                       2.1 MB/s |  62 kB     00:00
+(37/50): harfbuzz-2.7.4-10.el9.x86_64.rpm                                                     6.7 MB/s | 629 kB     00:00
+(38/50): gssproxy-0.8.4-7.el9.x86_64.rpm                                                      3.2 MB/s | 114 kB     00:00
+(39/50): freetype-2.10.4-10.el9_5.x86_64.rpm                                                  4.1 MB/s | 389 kB     00:00
+(40/50): compat-openssl11-1.1.1k-5.el9_8.4.x86_64.rpm                                         3.4 MB/s | 1.5 MB     00:00
+(41/50): libev-4.33-6.el9.x86_64.rpm                                                          2.1 MB/s |  55 kB     00:00
+(42/50): quota-4.09-4.el9.x86_64.rpm                                                          8.0 MB/s | 202 kB     00:00
+(43/50): quota-nls-4.09-4.el9.noarch.rpm                                                      3.2 MB/s |  79 kB     00:00
+(44/50): smartmontools-7.2-10.el9.x86_64.rpm                                                   21 MB/s | 563 kB     00:00
+(45/50): libnfsidmap-2.5.4-42.el9_8.x86_64.rpm                                                2.8 MB/s |  68 kB     00:00
+(46/50): nfs-utils-2.5.4-42.el9_8.x86_64.rpm                                                   18 MB/s | 469 kB     00:00
+(47/50): libpng-1.6.37-15.el9_8.2.x86_64.rpm                                                  1.4 MB/s | 122 kB     00:00
+(48/50): sssd-nfs-idmap-2.9.8-4.el9_8.1.x86_64.rpm                                            1.6 MB/s |  42 kB     00:00
+(49/50): chkconfig-1.24-2.el9.x86_64.rpm                                                      481 kB/s | 182 kB     00:00
+(50/50): initscripts-10.11.8-4.el9.x86_64.rpm                                                 621 kB/s | 232 kB     00:00
+------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                         5.1 MB/s |  12 MB     00:02
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                      1/1
+  Installing       : libnfsidmap-1:2.5.4-42.el9_8.x86_64                                                                 1/51
+  Installing       : libXau-1.0.9-8.el9.x86_64                                                                           2/51
+  Installing       : libxcb-1.13.1-9.el9.x86_64                                                                          3/51
+  Installing       : libICE-1.0.10-8.el9.x86_64                                                                          4/51
+  Installing       : libSM-1.2.3-10.el9.x86_64                                                                           5/51
+  Installing       : libpng-2:1.6.37-15.el9_8.2.x86_64                                                                   6/51
+  Installing       : smartmontools-1:7.2-10.el9.x86_64                                                                   7/51
+  Running scriptlet: smartmontools-1:7.2-10.el9.x86_64                                                                   7/51
+Created symlink /etc/systemd/system/multi-user.target.wants/smartd.service ? /usr/lib/systemd/system/smartd.service.
+
+  Installing       : quota-nls-1:4.09-4.el9.noarch                                                                       8/51
+  Installing       : quota-1:4.09-4.el9.x86_64                                                                           9/51
+  Installing       : libev-4.33-6.el9.x86_64                                                                            10/51
+  Installing       : libverto-libev-0.3.2-3.el9.x86_64                                                                  11/51
+  Installing       : gssproxy-0.8.4-7.el9.x86_64                                                                        12/51
+  Running scriptlet: gssproxy-0.8.4-7.el9.x86_64                                                                        12/51
+  Installing       : chkconfig-1.24-2.el9.x86_64                                                                        13/51
+Error unpacking rpm package chkconfig-1.24-2.el9.x86_64
+  Installing       : initscripts-10.11.8-4.el9.x86_64                                                                   14/51
+error: unpacking of archive failed on file /etc/init.d;6a6b2736: cpio: File from package already exists as a directory in system
+error: chkconfig-1.24-2.el9.x86_64: install failed
+
+  Running scriptlet: initscripts-10.11.8-4.el9.x86_64                                                                   14/51
+Created symlink /etc/systemd/system/sysinit.target.wants/import-state.service ? /usr/lib/systemd/system/import-state.service.
+Created symlink /etc/systemd/system/sysinit.target.wants/loadmodules.service ? /usr/lib/systemd/system/loadmodules.service.
+
+  Running scriptlet: rpcbind-1.2.6-7.el9.x86_64                                                                         15/51
+  Installing       : rpcbind-1.2.6-7.el9.x86_64                                                                         15/51
+  Running scriptlet: rpcbind-1.2.6-7.el9.x86_64                                                                         15/51
+Created symlink /etc/systemd/system/multi-user.target.wants/rpcbind.service ? /usr/lib/systemd/system/rpcbind.service.
+Created symlink /etc/systemd/system/sockets.target.wants/rpcbind.socket ? /usr/lib/systemd/system/rpcbind.socket.
+
+  Running scriptlet: nfs-utils-1:2.5.4-42.el9_8.x86_64                                                                  16/51
+  Installing       : nfs-utils-1:2.5.4-42.el9_8.x86_64                                                                  16/51
+  Running scriptlet: nfs-utils-1:2.5.4-42.el9_8.x86_64                                                                  16/51
+  Installing       : graphite2-1.3.14-9.el9.x86_64                                                                      17/51
+  Installing       : freetype-2.10.4-10.el9_5.x86_64                                                                    18/51
+  Installing       : harfbuzz-2.7.4-10.el9.x86_64                                                                       19/51
+  Installing       : fontconfig-2.14.0-2.el9_1.x86_64                                                                   20/51
+  Running scriptlet: fontconfig-2.14.0-2.el9_1.x86_64                                                                   20/51
+  Installing       : bc-1.07.1-14.el9.x86_64                                                                            21/51
+  Installing       : kernel-headers-5.14.0-687.30.1.el9_8.x86_64                                                        22/51
+  Installing       : compat-openssl11-1:1.1.1k-5.el9_8.4.x86_64                                                         23/51
+  Installing       : glibc-headers-2.34-274.el9_8.x86_64                                                                24/51
+  Installing       : glibc-devel-2.34-274.el9_8.x86_64                                                                  25/51
+  Installing       : libxcrypt-devel-4.4.18-3.el9.x86_64                                                                26/51
+  Installing       : pcp-conf-6.3.7-8.el9_8.x86_64                                                                      27/51
+  Installing       : pcp-libs-6.3.7-8.el9_8.x86_64                                                                      28/51
+  Installing       : libX11-xcb-1.8.12-1.el9.x86_64                                                                     29/51
+  Installing       : ksh-3:1.0.6-15.el9.x86_64                                                                          30/51
+  Running scriptlet: ksh-3:1.0.6-15.el9.x86_64                                                                          30/51
+  Installing       : libX11-common-1.8.12-1.el9.noarch                                                                  31/51
+  Installing       : libX11-1.8.12-1.el9.x86_64                                                                         32/51
+  Installing       : libXext-1.3.4-8.el9.x86_64                                                                         33/51
+  Installing       : libXi-1.7.10-8.el9.x86_64                                                                          34/51
+  Installing       : libXrender-0.9.10-16.el9_8.1.x86_64                                                                35/51
+  Installing       : libXrandr-1.5.2-8.el9.x86_64                                                                       36/51
+  Installing       : libXtst-1.2.3-16.el9.x86_64                                                                        37/51
+  Installing       : libXv-1.0.11-16.el9.x86_64                                                                         38/51
+  Installing       : libXxf86dga-1.1.5-8.el9.x86_64                                                                     39/51
+  Installing       : libXxf86vm-1.1.4-18.el9.x86_64                                                                     40/51
+  Installing       : libXinerama-1.1.4-10.el9.x86_64                                                                    41/51
+  Installing       : libdmx-1.1.4-14.el9.x86_64                                                                         42/51
+  Installing       : libXt-1.2.0-6.el9.x86_64                                                                           43/51
+  Installing       : libXmu-1.1.3-8.el9.x86_64                                                                          44/51
+  Installing       : xorg-x11-xauth-1:1.1-10.el9.x86_64                                                                 45/51
+  Installing       : libXcomposite-0.4.5-7.el9.x86_64                                                                   46/51
+  Installing       : xorg-x11-utils-7.5-40.el9.x86_64                                                                   47/51
+  Installing       : lm_sensors-libs-3.6.0-10.el9.x86_64                                                                48/51
+  Installing       : sysstat-12.5.4-11.el9.x86_64                                                                       49/51
+  Running scriptlet: sysstat-12.5.4-11.el9.x86_64                                                                       49/51
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service ? /usr/lib/systemd/system/sysstat.service.
+Created symlink /etc/systemd/system/sysstat.service.wants/sysstat-collect.timer ? /usr/lib/systemd/system/sysstat-collect.timer.
+Created symlink /etc/systemd/system/sysstat.service.wants/sysstat-summary.timer ? /usr/lib/systemd/system/sysstat-summary.timer.
+
+  Installing       : oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64                                                50/51
+  Installing       : sssd-nfs-idmap-2.9.8-4.el9_8.1.x86_64                                                              51/51
+  Running scriptlet: fontconfig-2.14.0-2.el9_1.x86_64                                                                   51/51
+  Running scriptlet: oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64                                                51/51
+  Running scriptlet: sssd-nfs-idmap-2.9.8-4.el9_8.1.x86_64                                                              51/51
+  Verifying        : libXext-1.3.4-8.el9.x86_64                                                                          1/51
+  Verifying        : libXt-1.2.0-6.el9.x86_64                                                                            2/51
+  Verifying        : libXtst-1.2.3-16.el9.x86_64                                                                         3/51
+  Verifying        : libXv-1.0.11-16.el9.x86_64                                                                          4/51
+  Verifying        : libXxf86dga-1.1.5-8.el9.x86_64                                                                      5/51
+  Verifying        : libXrandr-1.5.2-8.el9.x86_64                                                                        6/51
+  Verifying        : libICE-1.0.10-8.el9.x86_64                                                                          7/51
+  Verifying        : libXi-1.7.10-8.el9.x86_64                                                                           8/51
+  Verifying        : libxcrypt-devel-4.4.18-3.el9.x86_64                                                                 9/51
+  Verifying        : xorg-x11-xauth-1:1.1-10.el9.x86_64                                                                 10/51
+  Verifying        : libSM-1.2.3-10.el9.x86_64                                                                          11/51
+  Verifying        : libXcomposite-0.4.5-7.el9.x86_64                                                                   12/51
+  Verifying        : libXmu-1.1.3-8.el9.x86_64                                                                          13/51
+  Verifying        : libXxf86vm-1.1.4-18.el9.x86_64                                                                     14/51
+  Verifying        : lm_sensors-libs-3.6.0-10.el9.x86_64                                                                15/51
+  Verifying        : libXau-1.0.9-8.el9.x86_64                                                                          16/51
+  Verifying        : libXinerama-1.1.4-10.el9.x86_64                                                                    17/51
+  Verifying        : libxcb-1.13.1-9.el9.x86_64                                                                         18/51
+  Verifying        : xorg-x11-utils-7.5-40.el9.x86_64                                                                   19/51
+  Verifying        : fontconfig-2.14.0-2.el9_1.x86_64                                                                   20/51
+  Verifying        : libX11-common-1.8.12-1.el9.noarch                                                                  21/51
+  Verifying        : ksh-3:1.0.6-15.el9.x86_64                                                                          22/51
+  Verifying        : libX11-1.8.12-1.el9.x86_64                                                                         23/51
+  Verifying        : libX11-xcb-1.8.12-1.el9.x86_64                                                                     24/51
+  Verifying        : libdmx-1.1.4-14.el9.x86_64                                                                         25/51
+  Verifying        : pcp-conf-6.3.7-8.el9_8.x86_64                                                                      26/51
+  Verifying        : pcp-libs-6.3.7-8.el9_8.x86_64                                                                      27/51
+  Verifying        : sysstat-12.5.4-11.el9.x86_64                                                                       28/51
+  Verifying        : libXrender-0.9.10-16.el9_8.1.x86_64                                                                29/51
+  Verifying        : glibc-devel-2.34-274.el9_8.x86_64                                                                  30/51
+  Verifying        : glibc-headers-2.34-274.el9_8.x86_64                                                                31/51
+  Verifying        : compat-openssl11-1:1.1.1k-5.el9_8.4.x86_64                                                         32/51
+  Verifying        : kernel-headers-5.14.0-687.30.1.el9_8.x86_64                                                        33/51
+  Verifying        : bc-1.07.1-14.el9.x86_64                                                                            34/51
+  Verifying        : graphite2-1.3.14-9.el9.x86_64                                                                      35/51
+  Verifying        : libverto-libev-0.3.2-3.el9.x86_64                                                                  36/51
+  Verifying        : harfbuzz-2.7.4-10.el9.x86_64                                                                       37/51
+  Verifying        : rpcbind-1.2.6-7.el9.x86_64                                                                         38/51
+  Verifying        : gssproxy-0.8.4-7.el9.x86_64                                                                        39/51
+  Verifying        : freetype-2.10.4-10.el9_5.x86_64                                                                    40/51
+  Verifying        : chkconfig-1.24-2.el9.x86_64                                                                        41/51
+  Verifying        : initscripts-10.11.8-4.el9.x86_64                                                                   42/51
+  Verifying        : libev-4.33-6.el9.x86_64                                                                            43/51
+  Verifying        : quota-1:4.09-4.el9.x86_64                                                                          44/51
+  Verifying        : quota-nls-1:4.09-4.el9.noarch                                                                      45/51
+  Verifying        : smartmontools-1:7.2-10.el9.x86_64                                                                  46/51
+  Verifying        : libnfsidmap-1:2.5.4-42.el9_8.x86_64                                                                47/51
+  Verifying        : nfs-utils-1:2.5.4-42.el9_8.x86_64                                                                  48/51
+  Verifying        : libpng-2:1.6.37-15.el9_8.2.x86_64                                                                  49/51
+  Verifying        : sssd-nfs-idmap-2.9.8-4.el9_8.1.x86_64                                                              50/51
+  Verifying        : oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64                                                51/51
+Installed products updated.
+
+Installed:
+  bc-1.07.1-14.el9.x86_64                                   compat-openssl11-1:1.1.1k-5.el9_8.4.x86_64
+  fontconfig-2.14.0-2.el9_1.x86_64                          freetype-2.10.4-10.el9_5.x86_64
+  glibc-devel-2.34-274.el9_8.x86_64                         glibc-headers-2.34-274.el9_8.x86_64
+  graphite2-1.3.14-9.el9.x86_64                             gssproxy-0.8.4-7.el9.x86_64
+  harfbuzz-2.7.4-10.el9.x86_64                              initscripts-10.11.8-4.el9.x86_64
+  kernel-headers-5.14.0-687.30.1.el9_8.x86_64               ksh-3:1.0.6-15.el9.x86_64
+  libICE-1.0.10-8.el9.x86_64                                libSM-1.2.3-10.el9.x86_64
+  libX11-1.8.12-1.el9.x86_64                                libX11-common-1.8.12-1.el9.noarch
+  libX11-xcb-1.8.12-1.el9.x86_64                            libXau-1.0.9-8.el9.x86_64
+  libXcomposite-0.4.5-7.el9.x86_64                          libXext-1.3.4-8.el9.x86_64
+  libXi-1.7.10-8.el9.x86_64                                 libXinerama-1.1.4-10.el9.x86_64
+  libXmu-1.1.3-8.el9.x86_64                                 libXrandr-1.5.2-8.el9.x86_64
+  libXrender-0.9.10-16.el9_8.1.x86_64                       libXt-1.2.0-6.el9.x86_64
+  libXtst-1.2.3-16.el9.x86_64                               libXv-1.0.11-16.el9.x86_64
+  libXxf86dga-1.1.5-8.el9.x86_64                            libXxf86vm-1.1.4-18.el9.x86_64
+  libdmx-1.1.4-14.el9.x86_64                                libev-4.33-6.el9.x86_64
+  libnfsidmap-1:2.5.4-42.el9_8.x86_64                       libpng-2:1.6.37-15.el9_8.2.x86_64
+  libverto-libev-0.3.2-3.el9.x86_64                         libxcb-1.13.1-9.el9.x86_64
+  libxcrypt-devel-4.4.18-3.el9.x86_64                       lm_sensors-libs-3.6.0-10.el9.x86_64
+  nfs-utils-1:2.5.4-42.el9_8.x86_64                         oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64
+  pcp-conf-6.3.7-8.el9_8.x86_64                             pcp-libs-6.3.7-8.el9_8.x86_64
+  quota-1:4.09-4.el9.x86_64                                 quota-nls-1:4.09-4.el9.noarch
+  rpcbind-1.2.6-7.el9.x86_64                                smartmontools-1:7.2-10.el9.x86_64
+  sssd-nfs-idmap-2.9.8-4.el9_8.1.x86_64                     sysstat-12.5.4-11.el9.x86_64
+  xorg-x11-utils-7.5-40.el9.x86_64                          xorg-x11-xauth-1:1.1-10.el9.x86_64
+Failed:
+  chkconfig-1.24-2.el9.x86_64
+
+Error: Transaction failed
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# nz -zv 10.119.44.202 1521
+bash: nz: command not found
+[root@dvr-prtplu-web01 Installer]# nc -zv 10.119.44.202 1521
+Ncat: Version 7.92 ( https://nmap.org/ncat )
+^C
+[root@dvr-prtplu-web01 Installer]# nc -zv 10.119.32.246 1521
+Ncat: Version 7.92 ( https://nmap.org/ncat )
+Ncat: Connected to 10.119.32.246:1521.
+Ncat: 0 bytes sent, 0 bytes received in 0.01 seconds.
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# ls -ltrh
+total 23M
+drwxr-xr-x. 2 dev  dev  4.0K Jul 29 01:24  postgresql-odbc-dep
+-rw-rw-rw-. 1 root root  35K Jul 29 09:42  oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.rpm
+-rw-r--r--. 1 dev  dev   23M Jul 29 16:53  postgresql-odbc-offline-dep.tar.gz
+-rw-r--r--. 1 dev  dev   26K Jul 29 16:54  oracle-ai-database-preinstall-26ai-1.0-1.el9.x86_64.zip
+drwxr-xr-x. 2 dev  dev    81 Jul 30 20:26 'Config Files'
+[root@dvr-prtplu-web01 Installer]# getenforce
+Permissive
+[root@dvr-prtplu-web01 Installer]# cat /etc/selinux/config
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+# See also:
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/using_selinux/changing-selinux-states-and-modes_using-selinux#changing-selinux-modes-at-boot-time_changing-selinux-states-and-modes
+#
+# NOTE: Up to RHEL 8 release included, SELINUX=disabled would also
+# fully disable SELinux during boot. If you need a system with SELinux
+# fully disabled instead of SELinux running with no policy loaded, you
+# need to pass selinux=0 to the kernel command line. You can use grubby
+# to persistently set the bootloader to boot with selinux=0:
+#
+#    grubby --update-kernel ALL --args selinux=0
+#
+# To revert back to SELinux enabled:
+#
+#    grubby --update-kernel ALL --remove-args selinux
+#
+SELINUX=permissive
+# SELINUXTYPE= can take one of these three values:
+#     targeted - Targeted processes are protected,
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# cat /etc/security/limits.conf
+# /etc/security/limits.conf
+#
+#This file sets the resource limits for the users logged in via PAM.
+#It does not affect resource limits of the system services.
+#
+#Also note that configuration files in /etc/security/limits.d directory,
+#which are read in alphabetical order, override the settings in this
+#file in case the domain is the same or more specific.
+#That means, for example, that setting a limit for wildcard domain here
+#can be overridden with a wildcard setting in a config file in the
+#subdirectory, but a user specific setting here can be overridden only
+#with a user specific setting in the subdirectory.
+#
+#Each line describes a limit for a user in the form:
+#
+#<domain>        <type>  <item>  <value>
+#
+#Where:
+#<domain> can be:
+#        - a user name
+#        - a group name, with @group syntax
+#        - the wildcard *, for default entry
+#        - the wildcard %, can be also used with %group syntax,
+#                 for maxlogin limit
+#
+#<type> can have the two values:
+#        - "soft" for enforcing the soft limits
+#        - "hard" for enforcing hard limits
+#
+#<item> can be one of the following:
+#        - core - limits the core file size (KB)
+#        - data - max data size (KB)
+#        - fsize - maximum filesize (KB)
+#        - memlock - max locked-in-memory address space (KB)
+#        - nofile - max number of open file descriptors
+#        - rss - max resident set size (KB)
+#        - stack - max stack size (KB)
+#        - cpu - max CPU time (MIN)
+#        - nproc - max number of processes
+#        - as - address space limit (KB)
+#        - maxlogins - max number of logins for this user
+#        - maxsyslogins - max number of logins on the system
+#        - priority - the priority to run user process with
+#        - locks - max number of file locks the user can hold
+#        - sigpending - max number of pending signals
+#        - msgqueue - max memory used by POSIX message queues (bytes)
+#        - nice - max nice priority allowed to raise to values: [-20, 19]
+#        - rtprio - max realtime priority
+#
+#<domain>      <type>  <item>         <value>
+#
+
+#*               soft    core            0
+#*               hard    rss             10000
+#@student        hard    nproc           20
+#@faculty        soft    nproc           20
+#@faculty        hard    nproc           50
+#ftp             hard    nproc           0
+#@student        -       maxlogins       4
+
+oracle   soft   nofile    1024
+oracle   hard   nofile    65536
+oracle   soft   nproc     2047
+oracle   hard   nproc     16384
+oracle   soft   stack     10240
+oracle   hard   stack     32768
+oracle   soft   memlock   3145728
+oracle   hard   memlock   3145728
+
+# End of file
+[root@dvr-prtplu-web01 Installer]# cat /etc/sysctl.conf
+# sysctl settings are defined through files in
+# /usr/lib/sysctl.d/, /run/sysctl.d/, and /etc/sysctl.d/.
+#
+# Vendors settings live in /usr/lib/sysctl.d/.
+# To override a whole file, create a new file with the same in
+# /etc/sysctl.d/ and put new settings there. To override
+# only specific settings, add a file with a lexically later
+# name in /etc/sysctl.d/ and put new settings there.
+#
+# For more information, see sysctl.conf(5) and sysctl.d(5).
+
+# oracle-ai-database-preinstall-26ai setting for fs.file-max is 6815744
+fs.file-max = 6815744
+
+# oracle-ai-database-preinstall-26ai setting for kernel.sem is '250 32000 100 128'
+kernel.sem = 250 32000 100 128
+
+# oracle-ai-database-preinstall-26ai setting for kernel.shmmni is 4096
+kernel.shmmni = 4096
+
+# oracle-ai-database-preinstall-26ai setting for kernel.shmall is 1073741824 on x86_64
+kernel.shmall = 1073741824
+
+# oracle-ai-database-preinstall-26ai setting for kernel.shmmax is 4398046511104 on x86_64
+kernel.shmmax = 4398046511104
+
+# oracle-ai-database-preinstall-26ai setting for kernel.panic_on_oops is 1 per Orabug 19212317
+kernel.panic_on_oops = 1
+
+# oracle-ai-database-preinstall-26ai setting for net.core.rmem_default is 262144
+net.core.rmem_default = 262144
+
+# oracle-ai-database-preinstall-26ai setting for net.core.rmem_max is 4194304
+net.core.rmem_max = 4194304
+
+# oracle-ai-database-preinstall-26ai setting for net.core.wmem_default is 262144
+net.core.wmem_default = 262144
+
+# oracle-ai-database-preinstall-26ai setting for net.core.wmem_max is 1048576
+net.core.wmem_max = 1048576
+
+# oracle-ai-database-preinstall-26ai setting for net.ipv4.conf.all.rp_filter is 2
+net.ipv4.conf.all.rp_filter = 2
+
+# oracle-ai-database-preinstall-26ai setting for net.ipv4.conf.default.rp_filter is 2
+net.ipv4.conf.default.rp_filter = 2
+
+# oracle-ai-database-preinstall-26ai setting for fs.aio-max-nr is 1048576
+fs.aio-max-nr = 1048576
+
+# oracle-ai-database-preinstall-26ai setting for vm.hugetlb_shm_group is gid of primary group of 'oracle' user
+vm.hugetlb_shm_group = 54321
+
+# oracle-ai-database-preinstall-26ai setting special parameters BEGIN
+# oracle-ai-database-preinstall-26ai setting for kernel.panic is 10
+kernel.panic = 10
+
+# oracle-ai-database-preinstall-26ai setting for net.ipv4.ip_local_port_range is 9000 65535
+net.ipv4.ip_local_port_range = 9000 65535
+
+# oracle-ai-database-preinstall-26ai setting special parameters END
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# systemctl status firewalld
+? firewalld.service - firewalld - dynamic firewall daemon
+     Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2026-07-30 16:49:07 WIB; 3h 52min ago
+       Docs: man:firewalld(1)
+   Main PID: 888 (firewalld)
+      Tasks: 2 (limit: 100203)
+     Memory: 42.1M (peak: 44.1M)
+        CPU: 320ms
+     CGroup: /system.slice/firewalld.service
+             +-888 /usr/bin/python3 -s /usr/sbin/firewalld --nofork --nopid
+
+Jul 30 16:49:06 dvr-prtplu-web01.bjkt.co.id systemd[1]: Starting firewalld - dynamic firewall daemon...
+Jul 30 16:49:07 dvr-prtplu-web01.bjkt.co.id systemd[1]: Started firewalld - dynamic firewall daemon.
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# systemctl stop firewalld
+[root@dvr-prtplu-web01 Installer]# systemctl disable firewalld
+Removed "/etc/systemd/system/multi-user.target.wants/firewalld.service".
+Removed "/etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service".
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# systemctl status firewalld
+? firewalld.service - firewalld - dynamic firewall daemon
+     Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; preset: enabled)
+     Active: inactive (dead)
+       Docs: man:firewalld(1)
+
+Jul 30 16:49:06 dvr-prtplu-web01.bjkt.co.id systemd[1]: Starting firewalld - dynamic firewall daemon...
+Jul 30 16:49:07 dvr-prtplu-web01.bjkt.co.id systemd[1]: Started firewalld - dynamic firewall daemon.
+Jul 30 20:41:27 dvr-prtplu-web01.bjkt.co.id systemd[1]: Stopping firewalld - dynamic firewall daemon...
+Jul 30 20:41:27 dvr-prtplu-web01.bjkt.co.id systemd[1]: firewalld.service: Deactivated successfully.
+Jul 30 20:41:27 dvr-prtplu-web01.bjkt.co.id systemd[1]: Stopped firewalld - dynamic firewall daemon.
+[root@dvr-prtplu-web01 Installer]#
+[root@dvr-prtplu-web01 Installer]# su - oracle
+Last login: Thu Jul 30 20:22:31 WIB 2026 from 10.42.110.225 on pts/2
+[oracle@dvr-prtplu-web01 ~]$ id oracle
+uid=54321(oracle) gid=54321(oinstall) groups=54321(oinstall)
+[oracle@dvr-prtplu-web01 ~]$
+[oracle@dvr-prtplu-web01 ~]$ env | grep ORA
+ORACLE_HOME=/u01/app/oracle/product/26ai/gateway
+[oracle@dvr-prtplu-web01 ~]$
+[oracle@dvr-prtplu-web01 ~]$
+[oracle@dvr-prtplu-web01 ~]$ cd installer/
+[oracle@dvr-prtplu-web01 installer]$ ls -ltrh
+total 850M
+drwxr-xr-x. 5 oracle oinstall   90 Jan 17  2026 gateways
+-rw-r--r--. 1 oracle oinstall 850M Jul 29 16:56 V1054595-01.zip
+drwxr-xr-x. 2 oracle oinstall   64 Jul 29 18:26 META-INF
+[oracle@dvr-prtplu-web01 installer]$ cd gateways/
+[oracle@dvr-prtplu-web01 gateways]$
+[oracle@dvr-prtplu-web01 gateways]$ ls -ltrh
+total 24K
+-rwxrwx---.  1 oracle oinstall  500 Feb  7  2013 welcome.html
+-rwxr-xr-x.  1 oracle oinstall 8.7K Jan 17  2026 runInstaller
+drwxr-xr-x.  4 oracle oinstall 4.0K Jan 17  2026 install
+drwxr-xr-x.  2 oracle oinstall   43 Jan 17  2026 response
+drwxr-xr-x. 16 oracle oinstall 4.0K Jan 17  2026 stage
+[oracle@dvr-prtplu-web01 gateways]$ cd response/
+[oracle@dvr-prtplu-web01 response]$ ll
+total 20
+-rw-rw-r--. 1 oracle oinstall 9776 Jan  3  2025 gateways.rsp
+-rwxrwxr-x. 1 oracle oinstall 6267 Jan  3  2025 netca.rsp
+[oracle@dvr-prtplu-web01 response]$ more gateways.rsp
+
+###############################################################################
+## Copyright(c) Oracle Corporation 2007,2025. All rights reserved.           ##
+##                                                                           ##
+## Specify values for the variables listed below to customize                ##
+## your installation.                                                        ##
+##                                                                           ##
+## Each variable is associated with a comment. The comment                   ##
+## can help to populate the variables with the appropriate                   ##
+## values.                                                                   ##
+##                                                                           ##
+###############################################################################
+
+
+#-------------------------------------------------------------------------------
+# Do not change the following system generated value.
+#-------------------------------------------------------------------------------
+oracle.install.responseFileVersion=/oracle/install/rspfmt_tginstall_response_schema_v23.0.0
+
+#-------------------------------------------------------------------------------
+# Unix group to be set for the inventory directory.
+#-------------------------------------------------------------------------------
+UNIX_GROUP_NAME=
+#-------------------------------------------------------------------------------
+# Inventory location.
+#-------------------------------------------------------------------------------
+INVENTORY_LOCATION=
+#-------------------------------------------------------------------------------
+# Complete path of the Oracle Home
+#-------------------------------------------------------------------------------
+[oracle@dvr-prtplu-web01 response]$ vi uat_gateway.rsp
+[oracle@dvr-prtplu-web01 response]$
+[oracle@dvr-prtplu-web01 response]$ cat uat_gateway.rsp
+###############################################################################
+## Copyright(c) Oracle Corporation 2007,2025. All rights reserved.           ##
+##                                                                           ##
+## Specify values for the variables listed below to customize                ##
+## your installation.                                                        ##
+##                                                                           ##
+## Each variable is associated with a comment. The comment                   ##
+## can help to populate the variables with the appropriate                   ##
+## values.                                                                   ##
+##                                                                           ##
+###############################################################################
+
+
+#-------------------------------------------------------------------------------
+# Do not change the following system generated value.
+#-------------------------------------------------------------------------------
+oracle.install.responseFileVersion=/oracle/install/rspfmt_tginstall_response_schema_v23.0.0
+
+#-------------------------------------------------------------------------------
+# Unix group to be set for the inventory directory.
+#-------------------------------------------------------------------------------
+UNIX_GROUP_NAME=oinstall
+#-------------------------------------------------------------------------------
+# Inventory location.
+#-------------------------------------------------------------------------------
+INVENTORY_LOCATION=/u01/app/oraInventory
+#-------------------------------------------------------------------------------
+# Complete path of the Oracle Home
+#-------------------------------------------------------------------------------
+ORACLE_HOME=/u01/app/oracle/product/26ai/gateway
+
+#-------------------------------------------------------------------------------
+# Complete path of the Oracle Base.
+#-------------------------------------------------------------------------------
+ORACLE_BASE=/u01/app/oracle
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.customComponents
+#Datatype   : StringList
+#Description: List of dependent components that need to be installed along with
+#             this product. Customer can change this list to suit their needs.
+#
+#             The following choices are available:
+#             oracle.rdbms.tg4ifmx - Oracle Database Gateway for Informix
+#             oracle.rdbms.tg4sybs - Oracle Database Gateway for Sybase
+#             oracle.rdbms.tg4msql - Oracle Database Gateway for Microsoft SQL Server
+#             oracle.rdbms.tg4tera - Oracle Database Gateway for Teradata
+#             oracle.pg4appc       - Oracle Database Gateway for APPC
+#             oracle.rdbms.tg4db2  - Oracle Database Gateway for DRDA
+#             oracle.pg4mq         - Oracle Database Gateway for WebSphere MQ
+#             oracle.rdbms.hsodbc  - Oracle Database Gateway for ODBC
+#
+#Example    : oracle.install.tg.customComponents={oracle.rdbms.tg4ifmx:23.0.0.0.0,oracle.rdbms.tg4sybs:23.0.0.0.0,oracle.pg4appc:23.0.0.0.0,oracle.pg4mq:23.0.0.0.0}
+#Component  : oracle.tg
+#------------------------------------------------------------------------------
+oracle.install.tg.customComponents=oracle.rdbms.hsodbc:23.0.0.0.0
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.ifmxConStr
+#Datatype   : StringList
+#Description: This variable is only required when installing the
+#             oracle.rdbms.tg4ifmx component.
+#
+#             The user input values for the details of the Informix database.
+#             This is a stringlist containing the following information in the
+#             same order:
+#             1. Informix Database Server Host Name
+#             2. Informix Database Server Port Number
+#             3. Informix Server Name
+#             4. Informix Database Name
+#
+#Example    : oracle.install.tg.ifmxConStr={svr1,1234,isvr,idb}
+#Component  : oracle.rdbms.tg4ifmx
+#------------------------------------------------------------------------------
+oracle.install.tg.ifmxConStr=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.msqlConStr
+#Datatype   : StringList
+#Description: This variable is only required when installing the
+#             oracle.rdbms.tg4msql component.
+#
+#             The user input values for the details of the Microsoft SQL Sever
+#             database.  This is a stringlist containing the following
+#             information in the same order:
+#             1. SQL Server Database Server Host Name
+#             2. SQL Server Database Server Port Number
+#             3. SQL Server Server Name
+#             4. SQL Server Database Name
+#
+#Example    : oracle.install.tg.msqlConStr={svr1,1234,msvr,mdb}
+#Component  : oracle.rdbms.tg4msql
+#------------------------------------------------------------------------------
+oracle.install.tg.msqlConStr=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.sybsConStr
+#Datatype   : StringList
+#Description: This variable is only required when installing the
+#             oracle.rdbms.tg4sybs component.
+#
+#             The user input values for the details of the Sybase database.
+#             This is a stringlist containing the following information in the
+#             same order:
+#             1. Sybase Database Server Host Name
+#             2. Sybase Database Server Port Number
+#             3. Sybase Database Name
+#
+#Example    : oracle.install.tg.sybsConStr={host1,123,sdb}
+#Component  : oracle.rdbms.tg4sybs
+#------------------------------------------------------------------------------
+oracle.install.tg.sybsConStr=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.teraConStr
+#Datatype   : StringList
+#Description: This variable is only required when installing the
+#             oracle.rdbms.tg4tera component.
+#
+#             The user input values for the details of the Teradata database.
+#             This is a stringlist containing the following information in the
+#             same order:
+#             1. Teradata Database Server Host IP or Alias
+#             2. Teradata Database Server Port Number
+#             3. Teradata Database Name
+#             4. Teradata TD_ICU_DATA Path
+#             5. Teradata COPLIB Path
+#             6. Teradata COPERR Path
+#
+#Example    : oracle.install.tg.teraConStr={svr1,1234,tdb,/opt/teradata/tdicu/lib,/usr/lib,/usr/lib}
+#Component  : oracle.rdbms.tg4tera
+#------------------------------------------------------------------------------
+oracle.install.tg.teraConStr=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.db2ConStr
+#Datatype   : StringList
+#Description: This variable is only required when installing the
+#             oracle.rdbms.tg4db2 component.
+#
+#             The user input values for the details of the DB2 UDB database.
+#             This is a stringlist containing the following information in the
+#             same order;
+#             1. DB2 UDB Server Host Name
+#             2. DB2 UDB DRDA Server Listener Port Number
+#             3. DB2 UDB Database Name
+#             4. DB2 UDB Target Type:
+#                  ZOS - DB2 UDB running on z/OS
+#                  IOS - DB2 UDB running on iSeries or AS/400 machines
+#                  LUW - DB2 UDB running on Linux, Unix, or Windows
+#
+#Example    : oracle.install.tg.db2ConStr={svr1,12345,udb,LUW}
+#Component  : oracle.rdbms.tg4db2
+#------------------------------------------------------------------------------
+oracle.install.tg.db2ConStr=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.appc.protocol
+#Datatype   : Number
+#Description: If PG4APPC communicates with OLTP via SNA then it is SNA.
+#             If it communicates through TCP/IP, then it is TCPIP.
+#Example    : oracle.install.tg.appc.protocol=SNA
+#Component  : oracle.pg4appc
+#------------------------------------------------------------------------------
+oracle.install.tg.appc.protocol=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.wbsp.remote.str
+#Datatype   : StringList
+#Description: if "Local" is selected on "Oracle Procedural Gateway for
+#             Websphere MQ Linux release 12.1.0.0.1" screen, then value={}
+#             if "Remote' is selected on "Oracle Procedural Gateway for
+#             Websphere MQ Linux release 12.1.0.0.1" screen, then
+#             value={queue manager, channel}
+#Component  : oracle.pg4mq
+#------------------------------------------------------------------------------
+oracle.install.tg.wbsp.remote.str=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.wbsp.location
+#Datatype   : Number
+#Description: LOCAL if "Local" is selected on "Oracle Procedural Gateway for
+#             websphere MQ Linux release 12.1.0.0.1" screen. Otherwise REMOTE
+#             if "Remote" is selected.
+#Example    : oracle.install.tg.wbsp.location=LOCAL
+#Component  : oracle.pg4mq
+#------------------------------------------------------------------------------
+oracle.install.tg.wbsp.location=
+
+#------------------------------------------------------------------------------
+#Name       : oracle.install.tg.wbsp.local.queuemgr
+#Datatype   : String
+#Description: Contains the value of "Queue Manager"
+#Component  : oracle.pg4mq
+#------------------------------------------------------------------------------
+oracle.install.tg.wbsp.local.queuemgr=
+
+[oracle@dvr-prtplu-web01 response]$
+[oracle@dvr-prtplu-web01 response]$
+[oracle@dvr-prtplu-web01 response]$ ./runInstaller -silent -executePrereqs -responseFile /home/oracle/installer/gateways/uat_gateway.rsp
+-bash: ./runInstaller: No such file or directory
+[oracle@dvr-prtplu-web01 response]$ ls -ltrh
+total 32K
+-rwxrwxr-x. 1 oracle oinstall 6.2K Jan  3  2025 netca.rsp
+-rw-rw-r--. 1 oracle oinstall 9.6K Jan  3  2025 gateways.rsp
+-rw-r--r--. 1 oracle oinstall 9.7K Jul 30 20:46 uat_gateway.rsp
+[oracle@dvr-prtplu-web01 response]$
+[oracle@dvr-prtplu-web01 response]$ mv uat_gateway.rsp ../
+[oracle@dvr-prtplu-web01 response]$ cd ../
+[oracle@dvr-prtplu-web01 gateways]$ ll
+total 36
+drwxr-xr-x.  4 oracle oinstall 4096 Jan 17  2026 install
+drwxr-xr-x.  2 oracle oinstall   43 Jul 30 20:47 response
+-rwxr-xr-x.  1 oracle oinstall 8850 Jan 17  2026 runInstaller
+drwxr-xr-x. 16 oracle oinstall 4096 Jan 17  2026 stage
+-rw-r--r--.  1 oracle oinstall 9886 Jul 30 20:46 uat_gateway.rsp
+-rwxrwx---.  1 oracle oinstall  500 Feb  7  2013 welcome.html
+[oracle@dvr-prtplu-web01 gateways]$ ./runInstaller -silent -executePrereqs -responseFile /home/oracle/installer/gateways/uat_gateway.rsp
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 415 MB.   Actual 4219 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 8187 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2026-07-30_08-47-52PM. Please wait ...[oracle@dvr-prtplu-web01 gateways]$ *********************************************
+Current clock source: Verifies the current clock source configuration
+Severity: IGNORABLE
+Overall status: VERIFICATION_FAILED
+Error message: PRVE-10350 : Current clock source is not set to the expected value on node "dvr-prtplu-web01.bjkt.co.id" [Expected = "tsc" ; Found = "kvm-clock"].
+Cause:  The Configuration Verification Utility (CVU) determined that the
+         current clock source was not set to the expected value on
+         the indicated node, which would impact the database performance.
+Action:  Ensure that the current clock source is set to the expected
+         value on the indicated node.
+-----------------------------------------------
+[WARNING] [INS-13014] Target environment does not meet some optional requirements.
+   CAUSE: Some of the optional prerequisites are not met. See logs for details. /tmp/OraInstall2026-07-30_08-47-52PM/installActions2026-07-30_08-47-52PM.log.
+   ACTION: Identify the list of failed prerequisite checks from the log: /tmp/OraInstall2026-07-30_08-47-52PM/installActions2026-07-30_08-47-52PM.log. Then either from the log file or from installation manual find the appropriate configuration to meet the prerequisites and fix it manually.
+A log of this session is currently saved as: /tmp/OraInstall2026-07-30_08-47-52PM/installActions2026-07-30_08-47-52PM.log. Oracle recommends that if you want to keep this log, you should move it from the temporary location.
+
+[oracle@dvr-prtplu-web01 gateways]$ ./runInstaller -silent -noconfig -ignorePrereqFailure -responseFile /home/oracle/installer/gateways/uat_gateway.rsp
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 415 MB.   Actual 4218 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 8187 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2026-07-30_08-49-32PM. Please wait ...[oracle@dvr-prtplu-web01 gateways]$ [WARNING] [INS-13014] Target environment does not meet some optional requirements.
+   CAUSE: Some of the optional prerequisites are not met. See logs for details. installActions2026-07-30_08-49-32PM.log.
+   ACTION: Identify the list of failed prerequisite checks from the log: installActions2026-07-30_08-49-32PM.log. Then either from the log file or from installation manual find the appropriate configuration to meet the prerequisites and fix it manually.
+The response file for this session can be found at:
+ /u01/app/oracle/product/26ai/gateway/install/response/gateways_2026-07-30_08-49-32PM.rsp
+
+You can find the log of this install session at:
+ /tmp/OraInstall2026-07-30_08-49-32PM/installActions2026-07-30_08-49-32PM.log
+[oracle@dvr-prtplu-web01 gateways]$ The installation of Oracle Database Gateways was successful.
+Please check '/u01/app/oraInventory/logs/silentInstall2026-07-30_08-49-32PM.log' for more details.
+
+As a root user, run the following script(s):
+        1. /u01/app/oraInventory/orainstRoot.sh
+        2. /u01/app/oracle/product/26ai/gateway/root.sh
+
+
+
+Successfully Setup Software with warning(s).
+The log of this install session can be found at:
+ /u01/app/oraInventory/logs/installActions2026-07-30_08-49-32PM.log
+[oracle@dvr-prtplu-web01 gateways]$
+[oracle@dvr-prtplu-web01 gateways]$ cd $ORACLE_HOME/hs/admin
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ cat /etc/odbc.ini
+[DWH]
+Description = PostgreSQL via ODBC
+Driver = /usr/lib64/psqlodbc.so
+ServerName = 10.114.40.20
+Port = 25432
+Database = visionanalytics
+Username = sv_apex
+Password = t3STdeV+62
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ ls -ltrh
+total 16K
+-rw-r--r--. 1 oracle oinstall  489 Jan 17  2026 initdg4odbc.ora
+-rw-r--r--. 1 oracle oinstall 1.2K Jan 17  2026 extproc.ora
+-rw-r--r--. 1 oracle oinstall  408 Jul 30 20:50 listener.ora.sample
+-rw-r--r--. 1 oracle oinstall  244 Jul 30 20:50 tnsnames.ora.sample
+[oracle@dvr-prtplu-web01 admin]$ vi initDWH.ora
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ cat initDWH.ora
+# initDWH.ora - DG4ODBC initialization file
+HS_FDS_CONNECT_INFO = DWH
+HS_FDS_TRACE_LEVEL = 0
+HS_FDS_SHAREABLE_NAME = /usr/lib64/psqlodbc.so
+HS_LANGUAGE = AMERICAN_AMERICA.WE8ISO8859P9
+# Environment variables
+set ODBCINI=/etc/odbc.ini
+[oracle@dvr-prtplu-web01 admin]$ pwd
+/u01/app/oracle/product/26ai/gateway/hs/admin
+[oracle@dvr-prtplu-web01 admin]$ ll
+total 20
+-rw-r--r--. 1 oracle oinstall 1170 Jan 17  2026 extproc.ora
+-rw-r--r--. 1 oracle oinstall  489 Jan 17  2026 initdg4odbc.ora
+-rw-r--r--. 1 oracle oinstall  234 Jul 30 20:55 initDWH.ora
+-rw-r--r--. 1 oracle oinstall  408 Jul 30 20:50 listener.ora.sample
+-rw-r--r--. 1 oracle oinstall  244 Jul 30 20:50 tnsnames.ora.sample
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ cd $ORACLE_HOME/networkrk/admin
+-bash: cd: /u01/app/oracle/product/26ai/gateway/networkrk/admin: No such file or directory
+[oracle@dvr-prtplu-web01 admin]$ cd $ORACLE_HOME/network/admin
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ ls -ltrh
+total 4.0K
+-rw-r--r--. 1 oracle oinstall 1.9K May 19  2021 shrept.lst
+drwxr-xr-x. 2 oracle oinstall   64 Jul 30 20:49 samples
+[oracle@dvr-prtplu-web01 admin]$ pwd
+/u01/app/oracle/product/26ai/gateway/network/admin
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ vi listener.ora
+[oracle@dvr-prtplu-web01 admin]$ vi tnsnames.ora
+[oracle@dvr-prtplu-web01 admin]$ cat listener.ora
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 10.119.48.26)(PORT = 1521))
+    )
+  )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (SID_NAME = DWH)
+      (ORACLE_HOME = /u01/app/oracle/product/26ai/gateway)
+      (PROGRAM = dg4odbc)
+    )
+  )
+
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ cat tnsnames.ora
+DWH =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 10.119.48.26)(PORT = 1521))
+    (CONNECT_DATA =
+      (SID = DWH)
+    )
+    (HS = OK)
+  )
+
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ lsnrctl start
+
+LSNRCTL for Linux: Version 23.26.1.0.0 - Production on 30-JUL-2026 20:59:35
+
+Copyright (c) 1991, 2026, Oracle.  All rights reserved.
+
+Starting /u01/app/oracle/product/26ai/gateway/bin/tnslsnr: please wait...
+
+TNSLSNR for Linux: Version 23.26.1.0.0 - Production
+System parameter file is /u01/app/oracle/product/26ai/gateway/network/admin/listener.ora
+Log messages written to /u01/app/oracle/diag/tnslsnr/dvr-prtplu-web01/listener/alert/log.xml
+Listening on: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=10.119.48.26)(PORT=1521)))
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.119.48.26)(PORT=1521)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 23.26.1.0.0 - Production
+Start Date                30-JUL-2026 20:59:35
+Uptime                    0 days 0 hr. 0 min. 0 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /u01/app/oracle/product/26ai/gateway/network/admin/listener.ora
+Listener Log File         /u01/app/oracle/diag/tnslsnr/dvr-prtplu-web01/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=10.119.48.26)(PORT=1521)))
+Services Summary...
+Service "DWH" has 1 instance(s).
+  Instance "DWH", status UNKNOWN, has 1 handler(s) for this service...
+The command completed successfully
+[oracle@dvr-prtplu-web01 admin]$
+[oracle@dvr-prtplu-web01 admin]$ tnsping DWH
+
+TNS Ping Utility for Linux: Version 23.26.1.0.0 - Production on 30-JUL-2026 20:59:47
+
+Copyright (c) 1997, 2026, Oracle.  All rights reserved.
+
+Used parameter files:
+
+
+Used TNSNAMES adapter to resolve the alias
+Attempting to contact (DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = 10.119.48.26)(PORT = 1521)) (CONNECT_DATA = (SID = DWH)) (HS = OK))
+OK (0 msec)
+[oracle@dvr-prtplu-web01 admin]$
